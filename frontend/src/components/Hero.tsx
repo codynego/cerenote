@@ -7,7 +7,7 @@ export const Hero = () => {
   return (
     <div className="flex flex-col justify-center items-center text-white gap-5">
         <div className="bg-slate-600  rounded-lg flex justify-between gap-2 p-[5px] text-white">
-            <p className="bg-slate-400 px-[5px] rounded-lg">Guess what?</p>
+            <p className="bg-slate-400 px-[5px] rounded-lg text-blue-800 font-bold"><i className="fa-solid fa-lightbulb"></i> Guess what?</p>
             <p>Turn Chaos into clarity <i className="fa-solid fa-right-long text-purple-300"></i></p>
         </div>
         <div className="sm:w-1/2">

@@ -13,9 +13,9 @@ const logout = () => {
     <div className='bg-transparent flex justify-between text-white text-base p-7 items-center'>
       <h1 className='text-2xl md:text-3xl lg:text-5xl'>CERENOT</h1>
       <ul className='hidden md:flex gap-10'>
-        <li>Home</li>
-        <li>Features</li>
-        <li>About</li>
+        <li className='cursor-pointer hover:border-b-2 hover:border-white'>Home</li>
+        <li className='cursor-pointer hover:border-b-2 hover:border-white'>Features</li>
+        <li className='cursor-pointer hover:border-b-2 hover:border-white'>About</li>
       </ul>
       <div>
         {isAuthenticated ? (
