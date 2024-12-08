@@ -3,9 +3,7 @@ import { useAuth } from '../context/AuthProvider';
 
 export const Nav = () => {
   const { isAuthenticated} = useAuth();
-const login = () => {
-    window.location.href = '/login'
-}
+
 const logout = () => {
     window.location.href = '/login'
 }
@@ -25,8 +23,8 @@ const logout = () => {
           </div>
         ) : (
           <div className='flex gap-5  md:gap-10'>
-            <button onClick={login} className='button-primary px-4 py-1 md:px-6 md:py-2 text-sm md:text-base'>Login</button>
-            <button onClick={login} className='button-primary  px-4 py-1 md:px-6 md:py-2 text-sm md:text-base'>SignUp</button>
+            <button className='button-primary px-4 py-1 md:px-6 md:py-2 text-sm md:text-base'><a href="/login">Login</a></button>
+            <button className='button-primary  px-4 py-1 md:px-6 md:py-2 text-sm md:text-base'><a href="/signup">Sign up</a></button>
           </div>
         )}
       </div>

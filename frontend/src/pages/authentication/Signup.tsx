@@ -98,7 +98,7 @@ export const Signup = () => {
             </div>
             <button 
               type="submit" 
-              className="w-full py-3 bg-gradient-to-r from-[#691476] to-[#100e53] text-white rounded-full hover:bg-blue-600">
+              className="w-full py-3 bg-gradient-to-r from-[#691476] to-[#100e53] text-white rounded-full hover:bg-blue-900">
               Signup
             </button>
           </form>
