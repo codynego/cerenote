@@ -2,14 +2,19 @@ from fastapi import FastAPI
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from fastapi.middleware.cors import CORSMiddleware
+import os
+from datetime import datetime, timedelta
+from typing import Union, Any
+from jose import jwt
 
 app = FastAPI()
 
 # Secret key to encode and decode JWT tokens
-SECRET_KEY = "your_secret_key"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30  # 30 minutes
+REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
+JWT_SECRET_KEY = os.environ['JWT_SECRET_KEY']   # should be kept secret
+JWT_REFRESH_SECRET_KEY = os.environ['JWT_REFRESH_SECRET_KEY']
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

@@ -4,14 +4,10 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-cryptography = "*"
-fastapi = "*"
-python-jose = "*"
-passlib = "*"
-python-multipart = "*"
-uvicorn = "*"
-pydantic = "*"
-sqlalchemy = "*"
+django = "*"
+djangorestframework = "*"
+djangorestframework-simplejwt = "*"
+drf-yasg = "*"
 
 [dev-packages]
 
