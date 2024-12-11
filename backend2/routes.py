@@ -11,7 +11,7 @@ from schemas import user_schema
 router = APIRouter()
 
 @router.post("/register", response_model=user_schema.UserInDBBase)
-async def register_user(user: user_schema.UserCreate, db: Session = Depends(get_db)):
+async def register_user(user: user_schema.UserIn, db: Session = Depends(get_db)):
     db_user = db.query(user_model.User).filter(user_model.User.username == user.username).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
