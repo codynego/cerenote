@@ -2,7 +2,7 @@ from database import Base, engine
 from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from passlib.context import CryptContext
-from schemas.users import UserRole
+from backend2.schemas.user_schema import UserRole
 from sqlalchemy import Enum as SQLEnum
 
 
