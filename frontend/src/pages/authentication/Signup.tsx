@@ -1,12 +1,16 @@
 import { HeroRecording } from '@/components/HeroRecording';
 import React, { useState, useEffect } from 'react';
+// import { useAuth } from '@/context/AuthProvider';
 
 export const Signup = () => {
+  // const { isAuthenticated, setIsAuthenticated } = useAuth();
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const [emailError, setEmailError] = useState('');
+  const [usernameError, setUsernameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
@@ -16,7 +20,11 @@ export const Signup = () => {
     } else {
       setEmailError('');
     }
-
+    if (!username && username.length < 3) {
+      setUsernameError('Username must be at least 3 characters long');
+      } else {
+        setUsernameError('');
+        }
     if (password && password.length < 6) {
       setPasswordError('Password must be at least 6 characters');
     } else {
@@ -29,6 +37,8 @@ export const Signup = () => {
       setConfirmPasswordError('');
     }
   }, [email, password, confirmPassword]);
+
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +69,17 @@ export const Signup = () => {
             <h2 className="text-xl font-semibold text-center md:text-2xl">Signup</h2>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+              <label className="block text-sm font-medium text-gray-700">Username</label>
+              <input
+                type="text"
+                value={email}
+                onChange={(e) => setUsername(e.target.value)}
+                className={`w-full px-3 py-2 border-2 rounded ${emailError ? 'border-red-600' : 'border-green-700'}`}
+                required
+              />
+              {emailError && <p className="text-red-500 text-right">{usernameError}</p>}
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Email</label>
               <input
@@ -120,3 +141,7 @@ export const Signup = () => {
     </div>
   );
 };
+
+function useAuth(): { isAuthenticated: any; setIsAuthenticated: any; } {
+        throw new Error('Function not implemented.');
+      }
