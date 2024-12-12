@@ -10,7 +10,7 @@ class UserRole(str, Enum):
 class UserBase(BaseModel):
     username: str
     email: str
-    role: UserRole = UserRole.user
+    
 
 
 class UserIn(UserBase):
@@ -23,5 +23,6 @@ class UserInDBBase(UserBase):
         orm_mode = True
 
 class UserInDB(UserInDBBase):
+    role: UserRole = UserRole.user
     hashed_password: str
     

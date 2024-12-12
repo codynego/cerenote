@@ -13,6 +13,7 @@ uvicorn = "*"
 sqlalchemy = "*"
 pydantic = {extras = ["email"], version = "*"}
 pydantic-settings = "*"
+bcrypt = "*"
 
 [dev-packages]
 

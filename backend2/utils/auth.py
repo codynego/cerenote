@@ -5,9 +5,9 @@ from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy.orm import Session
 from . import security
-from models import User
+from models.user_model import User
 from database import get_db
-from backend2.schemas.tokens_schema import TokenData
+from schemas.tokens_schema import TokenData
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 

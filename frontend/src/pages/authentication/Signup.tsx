@@ -1,6 +1,8 @@
 import { HeroRecording } from '@/components/HeroRecording';
 import React, { useState, useEffect } from 'react';
 // import { useAuth } from '@/context/AuthProvider';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 export const Signup = () => {
   // const { isAuthenticated, setIsAuthenticated } = useAuth();
@@ -13,6 +15,9 @@ export const Signup = () => {
   const [usernameError, setUsernameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const [fetching, setFetching] = useState(false);
+  const [fetchStatus, setFetchStatus] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (email && !/\S+@\S+\.\S+/.test(email)) {
@@ -40,7 +45,7 @@ export const Signup = () => {
 
 
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || !confirmPassword) {
       if (!email) {
@@ -54,10 +59,30 @@ export const Signup = () => {
       }
       return;
     }
-    console.log(password, email)
-    setPassword("")
-    setConfirmPassword("")
-    setEmail("")
+    // API call to register user
+
+    await handleRegister(username, email, password);
+  };
+
+  const handleRegister = async (username: string, email: string, password: string) => {
+    try {
+      setFetching(true)
+      const response = await axios.post('http://localhost:8000/register', {
+        username,
+        email,
+        password
+      });
+      setFetching(false)
+      if (response.status === 200) {
+        setFetchStatus("sign up successful")
+        navigate('/login');
+      } else {
+        setFetchStatus(response.statusText)
+      }
+    } catch (error) {
+      
+      console.error('Error registering:', error);
+    }
   };
 
   return (
@@ -67,18 +92,21 @@ export const Signup = () => {
           <div>
             <h1 className="text-2xl font-bold text-center md:text-4xl">Join Us!</h1>
             <h2 className="text-xl font-semibold text-center md:text-2xl">Signup</h2>
+            {
+              fetchStatus ? <p className='text-center mt-10'>{fetchStatus}</p> : <p></p>
+            }
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
           <div>
               <label className="block text-sm font-medium text-gray-700">Username</label>
               <input
                 type="text"
-                value={email}
+                value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className={`w-full px-3 py-2 border-2 rounded ${emailError ? 'border-red-600' : 'border-green-700'}`}
                 required
               />
-              {emailError && <p className="text-red-500 text-right">{usernameError}</p>}
+              {usernameError && <p className="text-red-500 text-right">{usernameError}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Email</label>
@@ -119,8 +147,8 @@ export const Signup = () => {
             </div>
             <button 
               type="submit" 
-              className="w-full py-3 bg-gradient-to-r from-[#691476] to-[#100e53] text-white rounded-full hover:bg-blue-900">
-              Signup
+              className="flex justify-center items-center w-full py-3 bg-gradient-to-r from-[#691476] to-[#100e53] text-white rounded-full hover:bg-blue-900">
+              {fetching ? <div className='loader'></div> : "Signup"}
             </button>
           </form>
         </div>
@@ -141,7 +169,3 @@ export const Signup = () => {
     </div>
   );
 };
-
-function useAuth(): { isAuthenticated: any; setIsAuthenticated: any; } {
-        throw new Error('Function not implemented.');
-      }
