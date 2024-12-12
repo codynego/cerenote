@@ -1,19 +1,23 @@
 import { HeroRecording } from '@/components/HeroRecording';
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { AuthBtn } from '@/components/AuthBtn';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
+  const navigate = useNavigate();
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [fetching, setFetching] = useState(false)
 
   useEffect(() => {
-    if (email && !/\S+@\S+\.\S+/.test(email)) {
-      setEmailError('Invalid email address');
-    } else {
-      setEmailError('');
-    }
+    // if (email && !/\S+@\S+\.\S+/.test(email)) {
+    //   setEmailError('Invalid email address');
+    // } else {
+    //   setEmailError('');
+    // }
 
     if (password && password.length < 6) {
       setPasswordError('Password must be at least 6 characters');
@@ -22,7 +26,7 @@ export const Login = () => {
     }
   }, [email, password]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email || !password) {
       if (!email) {
@@ -32,9 +36,34 @@ export const Login = () => {
         setPasswordError('Password fields is required');
       }
     }
-    console.log(password, email)
-    setPassword("")
-    setEmail("")
+    await handleLogin(email, password);
+    setPassword("");
+    setEmail("");
+  };
+
+  const handleLogin = async (email: string, password: string) => {
+    try {
+      setFetching(true)
+      const formData = new URLSearchParams();
+      formData.append('username', email);
+      formData.append('password', password);
+  
+      const response = await axios.post('http://localhost:8000/token', formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+  
+      if (response.status === 200) {
+        console.log(response)
+        navigate('/dashboard'); // Navigate to the dashboard or another page
+      } else {
+        console.error('Login failed:', response.statusText);
+      }
+      setFetching(false)
+    } catch (error) {
+      console.error('Error logging in:', error);
+    }
   };
 
   return (
@@ -49,9 +78,9 @@ export const Login = () => {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <label className="block text-sm font-medium text-gray-700">Username</label>
             <input
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={`w-full px-3 py-2 border-2 rounded ${emailError ? 'border-red-600' : 'border-green-700'}`}
@@ -74,11 +103,7 @@ export const Login = () => {
             <p className='text-slate-400'>Don't have an account?</p>
             <p> <a href="/signup">Sign up</a></p>
           </div>
-          <button 
-          type="submit" 
-          className="w-full py-3 bg-gradient-to-r from-[#691476] to-[#100e53] text-white rounded-full hover:bg-blue-600">
-          Login
-        </button>
+        <AuthBtn fetching={fetching} text={"Login"}/>
         <div className='flex justify-center items-center'>
             <p><a href='/password-reset'>Forgot Password?</a></p>
         </div>

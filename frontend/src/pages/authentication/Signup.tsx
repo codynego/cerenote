@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 // import { useAuth } from '@/context/AuthProvider';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { AuthBtn } from '@/components/AuthBtn';
 
 export const Signup = () => {
   // const { isAuthenticated, setIsAuthenticated } = useAuth();
@@ -145,11 +146,7 @@ export const Signup = () => {
               <p className='text-slate-400'>Already have an account?</p>
               <p><a href="/login">Login</a></p>
             </div>
-            <button 
-              type="submit" 
-              className="flex justify-center items-center w-full py-3 bg-gradient-to-r from-[#691476] to-[#100e53] text-white rounded-full hover:bg-blue-900">
-              {fetching ? <div className='loader'></div> : "Signup"}
-            </button>
+            <AuthBtn fetching={fetching} text={"Signup"}/>
           </form>
         </div>
       </div>
