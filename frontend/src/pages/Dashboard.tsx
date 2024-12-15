@@ -12,7 +12,7 @@ export const Dashboard = () => {
     return
   }
   return (
-    <div className="bg-primary text-white flex w-full h-screen overflow-hidden">
+    <div className="bg-primary text-white flex w-full h-screen overflow-hidden relative">
       <SideBar />
       <div className="flex-1 flex flex-col overflow-y-auto p-10">
         <div className="flex justify-center py-7">

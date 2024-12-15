@@ -11,8 +11,28 @@ export const Login = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [fetching, setFetching] = useState(false)
-  const { setIsAuthenticated } = useAuth()
+  const { setIsAuthenticated, setAccessToken } = useAuth()
   
+  
+  // const generateKey = async () => {
+  //   return await crypto.subtle.generateKey(
+  //     {name: "AES-GCM", length:256}, true, ["encrypt", "decrypt"]
+  //   )
+  // }
+  // const encryptToken = async () => {
+  //   const encoder = new TextEncoder();
+  //   const data = encoder.encode(accessToken);
+
+  //   const iv = crypto.getRandomValues(new Uint8Array(12))
+  //   const key = await generateKey()
+
+  //   const encryptedData = await crypto.subtle.encrypt(
+  //     {name: "AES-GCM", iv: iv},
+  //     key,
+  //     data
+  //   );
+  //   return {iv, encryptedData}
+  // }
 
   useEffect(() => {
     // if (email && !/\S+@\S+\.\S+/.test(email)) {
@@ -59,6 +79,8 @@ export const Login = () => {
       if (response.status === 200) {
         console.log(response)
         localStorage.setItem('token', response.data.access_token);
+        setAccessToken(response.data.access_token)
+        // encryptToken()
         setIsAuthenticated(true)
         navigate('/dashboard'); // Navigate to the dashboard or another page
       } else {

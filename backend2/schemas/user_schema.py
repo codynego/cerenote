@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, List
 from enum import Enum
+from .notes_schema import CategoryBase
 
 
 class UserRole(str, Enum):
@@ -25,4 +26,5 @@ class UserInDBBase(UserBase):
 class UserInDB(UserInDBBase):
     role: UserRole = UserRole.user
     hashed_password: str
+    categories : List[CategoryBase] = []
     
