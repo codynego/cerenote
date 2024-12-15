@@ -18,7 +18,7 @@ export const Hero = () => {
             <p className="text-md md:text-xl text-center text-gray-300">Transform scattered ideas into clear, actionable insights with the power of AI. Organize effortlessly, think creatively, and achieve more.</p>
         </div>
         {isAuthenticated ?
-        <button className="button-primary px-4 py-2">Dashboard</button> : 
+        <button className="button-primary px-4 py-2"><a href ="/dashboard">Dashboard</a></button> : 
         <button className="button-primary px-8 py-2">Get Started</button>}
     </div>
   )

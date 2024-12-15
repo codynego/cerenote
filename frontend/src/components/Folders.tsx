@@ -21,6 +21,8 @@ export const Folders = ({title, shared} : FolderProps) => {
     const { setAccessToken } = useAuth()
     const [categories, setCategories] = useState([])
     const accessToken = localStorage.getItem('token')
+    const [activeId, setActiveId] = useState<number | null>(null);
+
     const url = shared ? 'http://localhost:8000/categories/shared/':"http://localhost:8000/categories/"
   
 
@@ -29,6 +31,7 @@ export const Folders = ({title, shared} : FolderProps) => {
     }
 
     const handlefetch = async () => {
+      console.log("fetched")
       
       try {
         const response = await axios.get(url, {
@@ -48,15 +51,17 @@ export const Folders = ({title, shared} : FolderProps) => {
     }
 
     useEffect(() => {
+      const accessToken = localStorage.getItem('token')
       if (accessToken) {
         setAccessToken(accessToken)
         handlefetch()
       }
       // console.log(categories)
-    }, [categories])
+    }, [setCategories])
     
     
     const handleCreateNew = async () => {
+      const accessToken = localStorage.getItem('token')
       try {
         // setFetching(true)
         console.log("fetching")
@@ -98,7 +103,13 @@ export const Folders = ({title, shared} : FolderProps) => {
       <div className='flex flex-col gap-2'>
         {
           categories.map((category: CategoryProps) => (
-            <DirCategory title={category.name} key={category.id} />
+            <DirCategory
+            key={category.id}
+            id={category.id}
+            title={category.name}
+            activeId={activeId}
+            setActiveId={setActiveId}
+          />
             ))
         }
       </div> : null}
