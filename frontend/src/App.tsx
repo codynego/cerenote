@@ -5,6 +5,20 @@ import { Signup } from "./pages/authentication/Signup";
 import { AuthProvider } from "./context/AuthProvider";
 import { Dashboard } from "./pages/Dashboard";
 
+import { useAuth } from '@/context/AuthProvider';
+import { Navigate } from 'react-router-dom';
+
+const ProtectedRoute = ({ element }: { element: JSX.Element }) => {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return element;
+};
+
+
 function App() {
   return (
     <AuthProvider>
@@ -13,7 +27,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

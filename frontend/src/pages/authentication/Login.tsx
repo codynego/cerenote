@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { AuthBtn } from '@/components/AuthBtn';
-
+import { useAuth } from '@/context/AuthProvider';
 export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -11,6 +11,8 @@ export const Login = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [fetching, setFetching] = useState(false)
+  const { setIsAuthenticated } = useAuth()
+  
 
   useEffect(() => {
     // if (email && !/\S+@\S+\.\S+/.test(email)) {
@@ -56,6 +58,8 @@ export const Login = () => {
   
       if (response.status === 200) {
         console.log(response)
+        localStorage.setItem('token', response.data.access_token);
+        setIsAuthenticated(true)
         navigate('/dashboard'); // Navigate to the dashboard or another page
       } else {
         console.error('Login failed:', response.statusText);

@@ -7,6 +7,11 @@
   background-image: linear-gradient(to right top, #691476, #4e1d6d, #351f60, #201e50, #101a3f, #0b183b, #051637, #021333, #00133c, #001344, #05114c, #100e53);
 }
 
+* {
+  padding: 0;
+  margin: 0;
+}
+
 body {
     width: 100vw;
     height: 100vh;

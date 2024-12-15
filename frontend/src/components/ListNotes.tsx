@@ -1,5 +1,6 @@
 import React from "react";
 import { ListCard } from "./ListCard";
+import { DropDown } from "./DropDown";
 
 interface ListNotesProps {
   title: string;
@@ -8,25 +9,21 @@ interface ListNotesProps {
 export const ListNotes = ({ title }: ListNotesProps) => {
     const [dropDown, setDropDown] = React.useState(false);
   return (
-    <div className="">
-        <div className="flex gap-10">
+    <div className="py-2 overflow-x-hidden">
+        <div className="flex gap-5">
         <h1 className="text-xl">{title}</h1>
-        <div onClick={() => setDropDown(!dropDown)} className="duration-1000">
-        {dropDown ? <i className="fa-solid fa-caret-down" ></i> : <i className="fa-solid fa-caret-right" ></i>}
-        </div>
+        <DropDown dropDown={dropDown} setDropDown={setDropDown} />
         </div>
         {
             dropDown ? 
-            <div className="grid grid-cols-3 gap-5 my-3 duration-1000">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 my-3">
                 <ListCard/>
                 <ListCard/>
                 <ListCard/>
                 <ListCard/>
                 <ListCard/>
                 <ListCard/>
-                <ListCard/>
-                <ListCard/>
-                <ListCard/>
+  
             </div> : null
         }
     </div>
