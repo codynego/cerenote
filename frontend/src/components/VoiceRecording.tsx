@@ -8,7 +8,7 @@ const VoiceRecording = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [transcription, setTranscription] = useState("hello world")
+  const [transcription, setTranscription] = useState("hello world, my name is nego and i want to tell yiy that hvns nb.kvjs njvw nmm.SDmnbckS.n .kbvBS ,mngsm")
   useEffect(() => {
     if (isRecording && !isPaused) {
       intervalRef.current = setInterval(() => {
@@ -84,8 +84,10 @@ const VoiceRecording = () => {
   };
 
   return (
-    <div className="bg-gray-200 flex bg-opacity-40 justify-center items-center top-0 left-0 absolute w-full h-full">
-        <div className='flex space-x-4 mb-4 bg-blue-950 p-10 rounded-2xl flex-col gap-5 relative justify-center'>
+    <div className="bg-gray-200 grid bg-opacity-40 grid-cols-3 top-0 left-0 absolute w-full h-full">
+      <div></div>
+      <div className='flex  items-center col-span-2 gap-10'>
+      <div className='flex space-x-4 mb-4 bg-blue-950 p-10 pr-12 rounded-2xl flex-col gap-5 relative justify-center'>
           <i className="fa-solid fa-xmark cursor-pointer absolute  text-red-700 rounded-full  top-[-20px] left-[-30px]"></i>
           <div className="text-white text-4xl font-bold text-center">{formatTime(timer)}</div>
           <i className={`fa-solid fa-microphone text-4xl mb-4 bg-white rounded-full p-10 text-center ${isPaused ? 'text-green-400' : isRecording ? 'blinking' : 'text-blue-950'}`}></i>
@@ -97,8 +99,9 @@ const VoiceRecording = () => {
           </button>
         </div>
         <div className="transcription-container">
-        <h1 className="transcription-title">Transcribing</h1>
-        <div className="transcription-text">{transcription}</div>
+          <h1 className="transcription-title">Transcribing</h1>
+          <div className="transcription-text">{transcription}</div>
+        </div>
       </div>
     </div>
   );
