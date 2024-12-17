@@ -179,3 +179,51 @@ h1 {
 .floating-btn {
   animation: slideIn 0.5s ease-out;
 }
+
+/* Add this to your CSS file */
+.blinking {
+  animation: blinking 1s infinite;
+}
+
+@keyframes blinking {
+  0% { color: red; }
+  50% { color: transparent; }
+  100% { color: red; }
+}
+
+.transcription-container {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #691476; /* Use the primary color from your gradient */
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  width: 80%;
+  max-width: 600px;
+  text-align: center;
+  color: white; /* Use the primary color from your gradient */
+  font-family: 'Courier New', Courier, monospace;
+  box-shadow: 0 0 20px #691476; /* Use the primary color from your gradient */
+  animation: pulse 2s infinite;
+}
+
+.transcription-title {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.transcription-text {
+  font-size: 1.2rem;
+  white-space: pre-wrap;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 10px #691476; /* Use the primary color from your gradient */
+  }
+  50% {
+    box-shadow: 0 0 20px #691476; /* Use the primary color from your gradient */
+  }
+  100% {
+    box-shadow: 0 0 10px #691476; /* Use the primary color from your gradient */
+  }
+}

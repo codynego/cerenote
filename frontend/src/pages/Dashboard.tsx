@@ -3,9 +3,12 @@ import { ListNotes } from "@/components/ListNotes"
 import { SideBar } from "@/components/SideBar"
 import { useAuth } from '../context/AuthProvider';
 import { useNavigate } from "react-router-dom";
+import VoiceRecording from "@/components/VoiceRecording";
+import { useState } from "react";
 
 export const Dashboard = () => {
   const { isAuthenticated } = useAuth();
+  const [recordState, setRecordState] = useState(true)
   const navigate = useNavigate();
   if (!isAuthenticated) {
     navigate('/login')
@@ -25,7 +28,11 @@ export const Dashboard = () => {
               <ListNotes title={"Recent Notes"} />
               <ListNotes title={"All Notes"} />
             </div>
-            <FloatingBtn />
+            <div onClick={() => setRecordState(true)} className="p-10">
+            <FloatingBtn/>
+            </div>
+            {recordState ? <VoiceRecording/> : null
+            }
           </div>
         </div>
       </div>
