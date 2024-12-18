@@ -11,9 +11,9 @@ export const Login = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [fetching, setFetching] = useState(false)
-  const { setIsAuthenticated, setAccessToken } = useAuth()
+  const { isAuthenticated, setIsAuthenticated, setAccessToken } = useAuth()
   
-  
+  console.log("login1",isAuthenticated)
   // const generateKey = async () => {
   //   return await crypto.subtle.generateKey(
   //     {name: "AES-GCM", length:256}, true, ["encrypt", "decrypt"]
@@ -82,6 +82,7 @@ export const Login = () => {
         setAccessToken(response.data.access_token)
         // encryptToken()
         setIsAuthenticated(true)
+        console.log("login",isAuthenticated)
         navigate('/dashboard'); // Navigate to the dashboard or another page
       } else {
         console.error('Login failed:', response.statusText);

@@ -8,7 +8,7 @@ const VoiceRecording = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [transcription, setTranscription] = useState("hello world, my name is nego and i want to tell yiy that hvns nb.kvjs njvw nmm.SDmnbckS.n .kbvBS ,mngsm")
+  const [transcription] = useState("hello world, my name is nego and i want to tell yiy that hvns nb.kvjs njvw nmm.SDmnbckS.n .kbvBS ,mngsm")
   useEffect(() => {
     if (isRecording && !isPaused) {
       intervalRef.current = setInterval(() => {

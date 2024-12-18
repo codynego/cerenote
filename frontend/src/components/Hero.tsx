@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthProvider';
 
 export const Hero = () => {
     const { isAuthenticated} = useAuth();
+    console.log("hero",isAuthenticated)
   return (
     <div className="flex flex-col justify-center items-center text-white gap-5">
         <div className="bg-slate-600  rounded-lg flex justify-between gap-2 p-[5px] text-white">
