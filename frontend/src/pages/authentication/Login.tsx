@@ -13,7 +13,10 @@ export const Login = () => {
   const [fetching, setFetching] = useState(false)
   const { isAuthenticated, setIsAuthenticated, setAccessToken } = useAuth()
   
-  console.log("login1",isAuthenticated)
+  if (isAuthenticated) {
+    navigate('/dashboard');
+    return
+  }
   // const generateKey = async () => {
   //   return await crypto.subtle.generateKey(
   //     {name: "AES-GCM", length:256}, true, ["encrypt", "decrypt"]

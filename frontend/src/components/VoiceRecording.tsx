@@ -1,4 +1,13 @@
+import { Transcribing } from '@/pages/Transcribing';
 import { useState, useRef, useEffect } from 'react';
+
+enum MessageTypes {
+  INFERENCE_REQUEST = 'INFERENCE_REQUEST',
+  DOWNLOADING = 'DOWNLOADING',
+  LOADING = 'LOADING',
+  RESULT = 'RESULT',
+  INFERENCE_DONE = 'INFERENCE_DONE'
+}
 
 const VoiceRecording = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -8,7 +17,122 @@ const VoiceRecording = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [transcription] = useState("hello world, my name is nego and i want to tell yiy that hvns nb.kvjs njvw nmm.SDmnbckS.n .kbvBS ,mngsm")
+  const [transcription, setTranscription] = useState<string | null>(null);
+  const [audioStream, setAudioStream] = useState<Blob | null>(null);
+  const [output, setOutput] = useState(null);
+  const [downloading, setDownloading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [finished, setFinished] = useState(false);
+
+  const isAudioAvailable = audioStream;
+
+  function handleAudioReset() {
+    setAudioStream(null);
+  }
+
+  const worker = useRef<Worker | null>(null);
+  useEffect(() => {
+    if (output) {
+      console.log("output", output);
+    } else if (loading) {
+      console.log("loading", loading);
+    } else if (downloading) {
+      console.log("downloading", downloading);
+    } else if (finished) {
+      console.log("finished");
+    }
+  }, [output, loading, downloading, finished]);
+
+  useEffect(() => {
+    if (!worker.current) {
+      worker.current = new Worker(new URL('./utils/whisper.worker.js', import.meta.url), {
+        type: 'module'
+      });
+    }
+
+    interface MessageEvent {
+      data: {
+        type: MessageTypes;
+        results?: any;
+      };
+    }
+
+    const onMessageReceived = async (e: MessageEvent) => {
+      switch (e.data.type) {
+        case MessageTypes.DOWNLOADING:
+          setDownloading(true);
+          console.log('DOWNLOADING');
+          break;
+        case MessageTypes.LOADING:
+          setLoading(true);
+          console.log('LOADING');
+          break;
+        case MessageTypes.RESULT:
+          setOutput(e.data.results);
+          setTranscription(e.data.results);
+          console.log(e.data.results);
+          break;
+        case MessageTypes.INFERENCE_DONE:
+          setFinished(true);
+          console.log("DONE");
+          break;
+      }
+    };
+
+    worker.current.addEventListener('message', onMessageReceived);
+
+    return () => worker.current?.removeEventListener('message', onMessageReceived);
+  }, []);
+
+  interface ReadAudioFromParams {
+    file: Blob;
+  }
+
+  async function readAudioFrom({ file }: ReadAudioFromParams): Promise<Float32Array> {
+    const sampling_rate = 16000;
+    const audioCTX = new AudioContext({ sampleRate: sampling_rate });
+    const response = await file.arrayBuffer();
+    const decoded = await audioCTX.decodeAudioData(response);
+    const audio = decoded.getChannelData(0);
+    return audio;
+  }
+
+  async function handleFormSubmission() {
+    if (!audioStream) {
+      console.log("No audio stream available");
+      return;
+    }
+
+    console.log("Audio stream found");
+    let audio;
+    try {
+      audio = await readAudioFrom({ file: audioStream });
+      console.log("Audio data read successfully:", audio);
+    } catch (error) {
+      console.error("Error reading audio data:", error);
+      return;
+    }
+
+    const model_name = `openai/whisper-tiny.en`;
+
+    if (worker.current) {
+      console.log("Sending inference request to worker");
+      worker.current.postMessage({
+        type: MessageTypes.INFERENCE_REQUEST,
+        audio,
+        model_name
+      });
+    } else {
+      console.log("Worker is not initialized");
+    }
+
+    if (output) {
+      console.log("Output received:", output);
+    } else {
+      console.log("No output received");
+    }
+  }
+
   useEffect(() => {
     if (isRecording && !isPaused) {
       intervalRef.current = setInterval(() => {
@@ -39,6 +163,7 @@ const VoiceRecording = () => {
             const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
             const url = URL.createObjectURL(audioBlob);
             setAudioURL(url);
+            setAudioStream(audioBlob);
             audioChunksRef.current = [];
           };
           mediaRecorderRef.current.start();
@@ -86,9 +211,9 @@ const VoiceRecording = () => {
   return (
     <div className="bg-gray-200 grid bg-opacity-40 grid-cols-3 top-0 left-0 absolute w-full h-full">
       <div></div>
-      <div className='flex  items-center col-span-2 gap-10'>
-      <div className='flex space-x-4 mb-4 bg-blue-950 p-10 pr-12 rounded-2xl flex-col gap-5 relative justify-center'>
-          <i className="fa-solid fa-xmark cursor-pointer absolute  text-red-700 rounded-full  top-[-20px] left-[-30px]"></i>
+      <div className='flex items-center col-span-2 gap-10'>
+        <div className='flex space-x-4 mb-4 bg-blue-950 p-10 pr-12 rounded-2xl flex-col gap-5 relative justify-center'>
+          <i className="fa-solid fa-xmark cursor-pointer absolute text-red-700 rounded-full top-[-20px] left-[-30px]"></i>
           <div className="text-white text-4xl font-bold text-center">{formatTime(timer)}</div>
           <i className={`fa-solid fa-microphone text-4xl mb-4 bg-white rounded-full p-10 text-center ${isPaused ? 'text-green-400' : isRecording ? 'blinking' : 'text-blue-950'}`}></i>
           <button onClick={handleStartPlayPause} className='rounded-2xl p-2 text-blue-950 cursor-pointer bg-white'>
@@ -98,10 +223,15 @@ const VoiceRecording = () => {
             Stop
           </button>
         </div>
-        <div className="transcription-container">
-          <h1 className="transcription-title">Transcribing</h1>
-          <div className="transcription-text">{transcription}</div>
-        </div>
+        {output ? (
+          <p>{output}</p>
+        ) : loading ? (
+          <p>Loading</p>
+        ) : isAudioAvailable ? (
+          <Transcribing output={output} handleFormSubmission={handleFormSubmission} handleAudioReset={handleAudioReset} audioStream={audioStream} />
+        ) : (
+          <p>none</p>
+        )}
       </div>
     </div>
   );

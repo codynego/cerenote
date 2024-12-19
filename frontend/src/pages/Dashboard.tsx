@@ -4,11 +4,13 @@ import { SideBar } from "@/components/SideBar"
 import { useAuth } from '../context/AuthProvider';
 // import { useNavigate } from "react-router-dom";
 import VoiceRecording from "@/components/VoiceRecording";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { MessageTypes } from '@/utils/presets'
 
 export const Dashboard = () => {
   const { isAuthenticated } = useAuth();
   const [recordState, setRecordState] = useState(true)
+
   // const navigate = useNavigate();
   console.log("dashboard",isAuthenticated)
   return (
@@ -36,3 +38,4 @@ export const Dashboard = () => {
     </div>
   )
 }
+
