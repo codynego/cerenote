@@ -1,5 +1,6 @@
 import { Transcribing } from '@/pages/Transcribing';
 import { useState, useRef, useEffect } from 'react';
+import { TestMe } from '@/pages/TestMe';
 
 enum MessageTypes {
   INFERENCE_REQUEST = 'INFERENCE_REQUEST',
@@ -32,22 +33,11 @@ const VoiceRecording = () => {
 
   const worker = useRef<Worker | null>(null);
   useEffect(() => {
-    if (output) {
-      console.log("output", output);
-    } else if (loading) {
-      console.log("loading", loading);
-    } else if (downloading) {
-      console.log("downloading", downloading);
-    } else if (finished) {
-      console.log("finished");
-    }
-  }, [output, loading, downloading, finished]);
-
-  useEffect(() => {
     if (!worker.current) {
-      worker.current = new Worker(new URL('./utils/whisper.worker.js', import.meta.url), {
+      worker.current = new Worker(new URL('../utils/whisper.worker.ts', import.meta.url), {
         type: 'module'
       });
+      console.log(worker.current)
     }
 
     interface MessageEvent {
@@ -61,20 +51,16 @@ const VoiceRecording = () => {
       switch (e.data.type) {
         case MessageTypes.DOWNLOADING:
           setDownloading(true);
-          console.log('DOWNLOADING');
           break;
         case MessageTypes.LOADING:
           setLoading(true);
-          console.log('LOADING');
           break;
         case MessageTypes.RESULT:
           setOutput(e.data.results);
           setTranscription(e.data.results);
-          console.log(e.data.results);
           break;
         case MessageTypes.INFERENCE_DONE:
           setFinished(true);
-          console.log("DONE");
           break;
       }
     };
@@ -103,11 +89,9 @@ const VoiceRecording = () => {
       return;
     }
 
-    console.log("Audio stream found");
     let audio;
     try {
       audio = await readAudioFrom({ file: audioStream });
-      console.log("Audio data read successfully:", audio);
     } catch (error) {
       console.error("Error reading audio data:", error);
       return;
@@ -116,20 +100,11 @@ const VoiceRecording = () => {
     const model_name = `openai/whisper-tiny.en`;
 
     if (worker.current) {
-      console.log("Sending inference request to worker");
       worker.current.postMessage({
         type: MessageTypes.INFERENCE_REQUEST,
         audio,
         model_name
       });
-    } else {
-      console.log("Worker is not initialized");
-    }
-
-    if (output) {
-      console.log("Output received:", output);
-    } else {
-      console.log("No output received");
     }
   }
 
@@ -152,7 +127,6 @@ const VoiceRecording = () => {
 
   const handleStartPlayPause = () => {
     if (!isRecording && !audioURL) {
-      // Start recording
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
           mediaRecorderRef.current = new MediaRecorder(stream);
@@ -173,15 +147,12 @@ const VoiceRecording = () => {
         })
         .catch(error => console.error('Error accessing media devices.', error));
     } else if (isRecording && !isPaused) {
-      // Pause recording
       mediaRecorderRef.current?.pause();
       setIsPaused(true);
     } else if (isRecording && isPaused) {
-      // Resume recording
       mediaRecorderRef.current?.resume();
       setIsPaused(false);
     } else if (audioURL) {
-      // Play or pause audio
       const audio = new Audio(audioURL);
       if (audio.paused) {
         audio.play();
@@ -228,7 +199,8 @@ const VoiceRecording = () => {
         ) : loading ? (
           <p>Loading</p>
         ) : isAudioAvailable ? (
-          <Transcribing output={output} handleFormSubmission={handleFormSubmission} handleAudioReset={handleAudioReset} audioStream={audioStream} />
+          <TestMe/>
+          // <Transcribing output={output} handleFormSubmission={handleFormSubmission} handleAudioReset={handleAudioReset} audioStream={audioStream} />
         ) : (
           <p>none</p>
         )}

@@ -1,166 +1,220 @@
-import { pipeline, PipelineType } from '@xenova/transformers';
+import { pipeline, Pipeline, Processor } from '@xenova/transformers';
 import { MessageTypes } from './presets';
 
-class MyTranscriptionPipeline {
-    static task: string = 'automatic-speech-recognition';
-    static model: string = 'openai/whisper-tiny.en';
-    private static instance: any = null;
-
-    static async getInstance(progress_callback: ((data: any) => void) | undefined): Promise<any> {
-        if (this.instance === null) {
-            this.instance = await pipeline(this.task as PipelineType, this.model, { progress_callback });
-        }
-        return this.instance;
-    }
+interface AudioData {
+  type: string;
+  audio: ArrayBuffer;
 }
 
-self.addEventListener('message', async (event: MessageEvent) => {
-    const { type, audio } = event.data;
-    if (type === MessageTypes.INFERENCE_REQUEST) {
-        await transcribe(audio);
+interface ProgressCallbackData {
+  status: 'progress' | 'done';
+  file?: string;
+  progress?: number;
+  loaded?: number;
+  total?: number;
+}
+
+interface Chunk {
+  text: string;
+  timestamp: [number, number];
+}
+
+interface ResultMessage {
+  type: string;
+  results: any[];
+  isDone: boolean;
+  completedUntilTimestamp?: number;
+}
+
+interface PartialResultMessage {
+  type: string;
+  result: {
+    text: string;
+    start: number;
+    end?: number;
+  };
+}
+
+class MyTranscriptionPipeline {
+  static task = 'automatic-speech-recognition';
+  static model = 'openai/whisper-tiny.en';
+  private static instance: Pipeline | null = null;
+
+  static async getInstance(progressCallback?: (data: ProgressCallbackData) => void): Promise<Pipeline> {
+    if (!this.instance) {
+      try {
+        // Attempt to load the model, with added error handling
+        this.instance = await pipeline(this.task, this.model, { progress_callback: progressCallback });
+      } catch (err) {
+        console.error('Error initializing Whisper pipeline:', err);
+        throw new Error('Pipeline initialization failed. Check the model URL or connection.');
+      }
     }
+    return this.instance;
+  }
+}
+
+self.addEventListener('message', async (event: MessageEvent<AudioData>) => {
+  const { type, audio } = event.data;
+  if (type === MessageTypes.INFERENCE_REQUEST) {
+    await transcribe(audio);
+  }
 });
 
-async function transcribe(audio: any): Promise<void> {
-    sendLoadingMessage('loading');
+async function transcribe(audio: ArrayBuffer): Promise<void> {
+  sendLoadingMessage('loading');
 
-    let transcriptionPipeline;
+  let pipelineInstance: Pipeline;
 
-    try {
-        transcriptionPipeline = await MyTranscriptionPipeline.getInstance(loadModelCallback);
-    } catch (err: any) {
-        console.error(err.message);
-    }
+  try {
+    pipelineInstance = await MyTranscriptionPipeline.getInstance(loadModelCallback);
+  } catch (err) {
+    console.error('Pipeline initialization error:', (err as Error).message);
+    return;
+  }
 
-    sendLoadingMessage('success');
+  sendLoadingMessage('success');
 
-    const strideLengthS = 5;
-    const generationTracker = new GenerationTracker(transcriptionPipeline, strideLengthS);
+  const strideLengthSeconds = 5;
+  const generationTracker = new GenerationTracker(pipelineInstance, strideLengthSeconds);
 
-    await transcriptionPipeline(audio, {
-        top_k: 0,
-        do_sample: false,
-        chunk_length: 30,
-        stride_length_s: strideLengthS,
-        return_timestamps: true,
-        callback_function: generationTracker.callbackFunction.bind(generationTracker),
-        chunk_callback: generationTracker.chunkCallback.bind(generationTracker),
+  try {
+    await pipelineInstance(audio, {
+      top_k: 0,
+      do_sample: false,
+      chunk_length: 30,
+      stride_length_s: strideLengthSeconds,
+      return_timestamps: true,
+      callback_function: generationTracker.callbackFunction.bind(generationTracker),
+      chunk_callback: generationTracker.chunkCallback.bind(generationTracker),
     });
+  } catch (err) {
+    console.error('Error during transcription:', err);
+    return;
+  }
 
-    generationTracker.sendFinalResult();
+  generationTracker.sendFinalResult();
 }
 
-async function loadModelCallback(data: any): Promise<void> {
-    const { status } = data;
-    if (status === 'progress') {
-        const { file, progress, loaded, total } = data;
-        sendDownloadingMessage(file, progress, loaded, total);
-    }
+async function loadModelCallback(data: ProgressCallbackData): Promise<void> {
+  if (data.status === 'progress') {
+    const { file, progress, loaded, total } = data;
+    sendDownloadingMessage(file, progress, loaded, total);
+  }
 }
 
 function sendLoadingMessage(status: string): void {
-    self.postMessage({
-        type: MessageTypes.LOADING,
-        status,
-    });
+  self.postMessage({
+    type: MessageTypes.LOADING,
+    status,
+  });
 }
 
-async function sendDownloadingMessage(file: string, progress: number, loaded: number, total: number): Promise<void> {
-    self.postMessage({
-        type: MessageTypes.DOWNLOADING,
-        file,
-        progress,
-        loaded,
-        total,
-    });
+function sendDownloadingMessage(
+  file?: string,
+  progress?: number,
+  loaded?: number,
+  total?: number
+): void {
+  self.postMessage({
+    type: MessageTypes.DOWNLOADING,
+    file,
+    progress,
+    loaded,
+    total,
+  });
 }
 
 class GenerationTracker {
-    private pipeline: any;
-    private strideLengthS: number;
-    private chunks: any[] = [];
-    private timePrecision: number;
-    private processedChunks: any[] = [];
-    private callbackFunctionCounter: number = 0;
+  private pipeline: Pipeline;
+  private strideLengthSeconds: number;
+  private chunks: any[] = [];
+  private processedChunks: any[] = [];
+  private callbackCounter = 0;
+  private timePrecision?: number;
 
-    constructor(pipeline: any, strideLengthS: number) {
-        this.pipeline = pipeline;
-        this.strideLengthS = strideLengthS;
-        this.timePrecision = pipeline?.processor.feature_extractor.config.chunk_length / pipeline.model.config.max_source_positions;
+  constructor(pipeline: Pipeline, strideLengthSeconds: number) {
+    this.pipeline = pipeline;
+    this.strideLengthSeconds = strideLengthSeconds;
+    const featureExtractor = pipeline?.processor?.feature_extractor as Processor;
+    this.timePrecision =
+      featureExtractor?.config.chunk_length / (pipeline.model.config as any).max_source_positions;
+  }
+
+  sendFinalResult(): void {
+    self.postMessage({ type: MessageTypes.INFERENCE_DONE });
+  }
+
+  callbackFunction(beams: any[]): void {
+    this.callbackCounter += 1;
+    if (this.callbackCounter % 10 !== 0) {
+      return;
     }
 
-    sendFinalResult(): void {
-        self.postMessage({ type: MessageTypes.INFERENCE_DONE });
-    }
+    const bestBeam = beams[0];
+    const text = this.pipeline.tokenizer.decode(bestBeam.output_token_ids, {
+      skip_special_tokens: true,
+    });
 
-    callbackFunction(beams: any[]): void {
-        this.callbackFunctionCounter += 1;
-        if (this.callbackFunctionCounter % 10 !== 0) {
-            return;
-        }
+    const result = {
+      text,
+      start: this.getLastChunkTimestamp(),
+      end: undefined,
+    };
 
-        const bestBeam = beams[0];
-        const text = this.pipeline.tokenizer.decode(bestBeam.output_token_ids, {
-            skip_special_tokens: true,
-        });
+    createPartialResultMessage(result);
+  }
 
-        const result = {
-            text,
-            start: this.getLastChunkTimestamp(),
-            end: undefined,
-        };
+  chunkCallback(data: any): void {
+    this.chunks.push(data);
+    const [text, { chunks }] = this.pipeline.tokenizer._decode_asr(this.chunks, {
+      time_precision: this.timePrecision,
+      return_timestamps: true,
+      force_full_sequence: false,
+    });
 
-        createPartialResultMessage(result);
-    }
+    this.processedChunks = chunks.map((chunk: Chunk, index: number) => this.processChunk(chunk, index));
 
-    chunkCallback(data: any): void {
-        this.chunks.push(data);
+    createResultMessage(this.processedChunks, false, this.getLastChunkTimestamp());
+  }
 
-        const [{ chunks }] = this.pipeline.tokenizer._decode_asr(this.chunks, {
-            time_precision: this.timePrecision,
-            return_timestamps: true,
-            force_full_sequence: false,
-        });
+  private getLastChunkTimestamp(): number {
+    return this.processedChunks.length > 0
+      ? this.processedChunks[this.processedChunks.length - 1]?.end || 0
+      : 0;
+  }
 
-        this.processedChunks = chunks.map((chunk: any, index: number) => {
-            return this.processChunk(chunk, index);
-        });
+  private processChunk(chunk: Chunk, index: number): any {
+    const { text, timestamp } = chunk;
+    const [start, end] = timestamp;
 
-        createResultMessage(this.processedChunks, false, this.getLastChunkTimestamp());
-    }
-
-    private getLastChunkTimestamp(): number {
-        if (this.processedChunks.length === 0) {
-            return 0;
-        }
-        return this.processedChunks[this.processedChunks.length - 1].end;
-    }
-
-    private processChunk(chunk: any, index: number): any {
-        const { text, timestamp } = chunk;
-        const [start, end] = timestamp;
-
-        return {
-            index,
-            text: `${text.trim()}`,
-            start: Math.round(start),
-            end: Math.round(end) || Math.round(start + 0.9 * this.strideLengthS),
-        };
-    }
+    return {
+      index,
+      text: text.trim(),
+      start: Math.round(start),
+      end: Math.round(end) || Math.round(start + 0.9 * this.strideLengthSeconds),
+    };
+  }
 }
 
-function createResultMessage(results: any[], isDone: boolean, completedUntilTimestamp: number): void {
-    self.postMessage({
-        type: MessageTypes.RESULT,
-        results,
-        isDone,
-        completedUntilTimestamp,
-    });
+function createResultMessage(
+  results: any[],
+  isDone: boolean,
+  completedUntilTimestamp?: number
+): void {
+  const message: ResultMessage = {
+    type: MessageTypes.RESULT,
+    results,
+    isDone,
+    completedUntilTimestamp,
+  };
+  self.postMessage(message);
 }
 
-function createPartialResultMessage(result: any): void {
-    self.postMessage({
-        type: MessageTypes.RESULT_PARTIAL,
-        result,
-    });
+function createPartialResultMessage(result: { text: string; start: number; end?: number }): void {
+  const message: PartialResultMessage = {
+    type: MessageTypes.RESULT_PARTIAL,
+    result,
+  };
+  self.postMessage(message);
 }

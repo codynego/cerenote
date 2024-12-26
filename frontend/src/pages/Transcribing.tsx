@@ -35,7 +35,7 @@ export const Transcribing: React.FC<TranscribingProps> = ({ output, handleFormSu
                     Your browser does not support the audio element.
                 </audio>
         </div>
-      <div className="transcription-text">{output}</div>
+      <div className="transcription-text">{"hello"}</div>
       {/* Add buttons or other elements to use the new props */}
       <button onClick={handleFormSubmission}>Transcribe</button>
       <button onClick={handleAudioReset}>Reset Audio</button>
