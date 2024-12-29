@@ -34,7 +34,7 @@ def transcribe_audio(file_path):
     print("audio transcibed")
     return transcription
 
-# # Example usage
-# file_path = "record.wav"
-# transcription = transcribe_audio(file_path)
-# print(transcription)
+# Example usage
+file_path = "audio/Recording.wav"
+transcription = transcribe_audio(file_path)
+print(transcription)

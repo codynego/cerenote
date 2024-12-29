@@ -39,9 +39,10 @@ const VoiceRecording = () => {
       return;
     }
     const formData = new FormData();
+    const uniqueFileName = `audio_${Date.now()}.wav`
     
     if (audioBlob) {
-      formData.append('audio_file', audioBlob);
+      formData.append('audio_file', audioBlob, uniqueFileName);
     }
     const response = await fetch('http://localhost:8000/note/audio_upload', {
       method: 'POST',
