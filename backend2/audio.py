@@ -31,10 +31,10 @@ def transcribe_audio(file_path):
         generate_kwargs={"max_new_tokens": 256},
         return_timestamps=True,
     )
-
+    print("audio transcibed")
     return transcription
 
-# Example usage
-file_path = "record.wav"
-transcription = transcribe_audio(file_path)
-print(transcription)
+# # Example usage
+# file_path = "record.wav"
+# transcription = transcribe_audio(file_path)
+# print(transcription)

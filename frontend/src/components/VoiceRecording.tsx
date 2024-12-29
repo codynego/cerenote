@@ -1,14 +1,6 @@
-import { Transcribing } from '@/pages/Transcribing';
+import { AudioElement } from '@/pages/AudioElement';
 import { useState, useRef, useEffect } from 'react';
-import { TestMe } from '@/pages/TestMe';
-
-enum MessageTypes {
-  INFERENCE_REQUEST = 'INFERENCE_REQUEST',
-  DOWNLOADING = 'DOWNLOADING',
-  LOADING = 'LOADING',
-  RESULT = 'RESULT',
-  INFERENCE_DONE = 'INFERENCE_DONE'
-}
+import { SoundWave } from './SoundWave';
 
 const VoiceRecording = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -24,6 +16,7 @@ const VoiceRecording = () => {
   // const [downloading, setDownloading] = useState(false);
   // const [loading, setLoading] = useState(false);
   // const [finished, setFinished] = useState(false);
+
 
   const isAudioAvailable = audioStream;
 
@@ -42,14 +35,13 @@ const VoiceRecording = () => {
 
   async function handleOnStopSubmission(audioBlob: HandleOnStopSubmissionProps['audioBlob']) {
     if (!audioStream && !audioBlob) {
-      console.log(audioStream)
       console.log("No audio stream available");
       return;
     }
     const formData = new FormData();
     
-    if (audioStream) {
-      formData.append('audio_file', audioStream);
+    if (audioBlob) {
+      formData.append('audio_file', audioBlob);
     }
     const response = await fetch('http://localhost:8000/note/audio_upload', {
       method: 'POST',
@@ -59,9 +51,9 @@ const VoiceRecording = () => {
       body: formData
     });
     const data: ResponseData = await response.json();
-    if (data.status === 'success') {
+    if (data) {
       setOutput(data.data);
-      console.log(output);
+      console.log(data);
     }
   }
 
@@ -146,25 +138,43 @@ const VoiceRecording = () => {
   };
 
   return (
-    <div className="bg-gray-200 grid bg-opacity-40 grid-cols-3 top-0 left-0 absolute w-full h-full">
-      <div></div>
-      <div className='flex items-center col-span-2 gap-10'>
-        <div className='flex space-x-4 mb-4 bg-blue-950 p-10 pr-12 rounded-2xl flex-col gap-5 relative justify-center'>
+    <div className="bg-gray-200 flex bg-opacity-40  top-0 left-0 absolute w-full h-full">
+      <div className='flex items-center justify-center w-full h-full'>
+        <div className='flex  mb-4 bg-blue-950 w-[500px] h-[300px] p-12 pr-12 rounded-2xl flex-col gap-5 relative justify-center'>
           <i className="fa-solid fa-xmark cursor-pointer absolute text-red-700 rounded-full top-[-20px] left-[-30px]"></i>
-          <div className="text-white text-4xl font-bold text-center">{formatTime(timer)}</div>
-          <i className={`fa-solid fa-microphone text-4xl mb-4 bg-white rounded-full p-10 text-center ${isPaused ? 'text-green-400' : isRecording ? 'blinking' : 'text-blue-950'}`}></i>
-          <button onClick={handleStartPlayPause} className='rounded-2xl p-2 text-blue-950 cursor-pointer bg-white'>
-            {isRecording ? (isPaused ? <i className="fa-solid fa-play text-xl"></i> : <i className="fa-solid fa-pause text-xl"></i>) : <i className="fa-solid fa-play text-xl"></i>}
-          </button>
-          <button onClick={handleStop} className='bg-red-600 rounded-xl py-2 px-5 text-white' disabled={!isRecording}>
-            Stop
-          </button>
+          
+          
+          <div className='flex  flex-col'>
+            {!isAudioAvailable? 
+              <div className=''>
+                <div className="text-white text-3xl font-bold text-center">{formatTime(timer)}</div>
+                <SoundWave isPaused={isPaused} />
+                {
+                  isRecording ? <p className='text-white text-base mt-10 text-center'>Listening...</p> : null
+                }
+              </div> : null}
+            {isAudioAvailable ? (
+              <AudioElement audioStream={audioStream} />
+          //  <Transcribing output={output} handleFormSubmission={handleFormSubmission} handleAudioReset={handleAudioReset} audioStream={audioStream} />
+            ) : null}
+          </div>
+          {
+            !isAudioAvailable ? 
+            <div className="flex justify-between">
+            <button onClick={handleStartPlayPause} className='rounded-full w-16 h-16 text-white bg-green-600 cursor-pointer'>
+              {isRecording ? (isPaused ? <i className="fa-solid fa-play text-xl"></i> : <i className="fa-solid fa-pause text-xl"></i>) : <i className="fa-solid fa-play text-xl"></i>}
+            </button>
+            <button onClick={handleStop} className='bg-red-600 rounded-full w-16 h-16 py-2 px-4 text-white' disabled={!isRecording}>
+              Stop
+            </button>
+          </div> : null
+          }
         </div>
-        {isAudioAvailable ? (
+        {/* {isAudioAvailable ? (
            <Transcribing output={output} handleFormSubmission={handleFormSubmission} handleAudioReset={handleAudioReset} audioStream={audioStream} />
         ) : (
           <p>none</p>
-        )}
+        )} */}
       </div>
     </div>
   );

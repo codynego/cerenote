@@ -12,8 +12,10 @@ from fastapi import UploadFile, File
 from fastapi.responses import StreamingResponse
 import shutil
 import os
+from audio import transcribe_audio
 
 router = APIRouter()
+
 
 
 @router.post("/category/create")
@@ -83,8 +85,30 @@ async def note_audio_upload(
     
     return {
         "status_code": 200,
-        "data": audio,
+        "data": audio.id,
         "detail": "Audio uploaded successfully",
+    }
+
+@router.post("/note/transcribe")
+async def note_audio_transcribe(
+    audio_id: int,
+    db: Session = Depends(get_db),
+    current_user: user_schema.UserInDBBase = Depends(auth.get_current_user),
+):
+    if not current_user:
+        raise HTTPException(status_code=401, detail="User not authorized")
+    
+    # Fetch the audio record
+    audio = db.query(Audio).filter(Audio.id == audio_id).first()
+    if not audio:
+        raise HTTPException(status_code=404, detail="Audio not found")
+    
+    # Transcribe the audio file
+    transcribed_text = transcribe_audio(audio.audio_path)
+    return {
+        "status_code": 200,
+        "data": transcribed_text,
+        "detail": "Audio transcribed successfully",
     }
 
 

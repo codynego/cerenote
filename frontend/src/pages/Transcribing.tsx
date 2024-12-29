@@ -28,14 +28,14 @@ export const Transcribing: React.FC<TranscribingProps> = ({ output, handleFormSu
     }, [audioStream])
   
     return (
-    <div className="transcription-container">
-      <h1 className="transcription-title">Transcribing</h1>
-      <div className='flex flex-col mb-2'>
+    <div className="">
+      <h1 className="">Transcribing</h1>
+      <div className=''>
                 <audio ref={audioRef} className='w-full' controls>
                     Your browser does not support the audio element.
                 </audio>
         </div>
-      <div className="transcription-text">{"hello"}</div>
+      <div className="">{"hello"}</div>
       {/* Add buttons or other elements to use the new props */}
       <button onClick={handleFormSubmission}>Transcribe</button>
       <button onClick={handleAudioReset}>Reset Audio</button>
