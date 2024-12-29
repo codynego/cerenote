@@ -4,8 +4,7 @@ import { SideBar } from "@/components/SideBar"
 import { useAuth } from '../context/AuthProvider';
 // import { useNavigate } from "react-router-dom";
 import VoiceRecording from "@/components/VoiceRecording";
-import { useState, useRef, useEffect } from "react";
-import { MessageTypes } from '@/utils/presets'
+import { useState } from "react";
 
 export const Dashboard = () => {
   const { isAuthenticated } = useAuth();

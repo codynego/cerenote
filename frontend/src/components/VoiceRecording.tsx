@@ -18,12 +18,12 @@ const VoiceRecording = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [transcription, setTranscription] = useState<string | null>(null);
+  // const [transcription, setTranscription] = useState<string | null>(null);
   const [audioStream, setAudioStream] = useState<Blob | null>(null);
   const [output, setOutput] = useState(null);
-  const [downloading, setDownloading] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [finished, setFinished] = useState(false);
+  // const [downloading, setDownloading] = useState(false);
+  // const [loading, setLoading] = useState(false);
+  // const [finished, setFinished] = useState(false);
 
   const isAudioAvailable = audioStream;
 
@@ -31,80 +31,45 @@ const VoiceRecording = () => {
     setAudioStream(null);
   }
 
-  const worker = useRef<Worker | null>(null);
-  useEffect(() => {
-    if (!worker.current) {
-      worker.current = new Worker(new URL('../utils/whisper.worker.ts', import.meta.url), {
-        type: 'module'
-      });
-      console.log(worker.current)
-    }
-
-    interface MessageEvent {
-      data: {
-        type: MessageTypes;
-        results?: any;
-      };
-    }
-
-    const onMessageReceived = async (e: MessageEvent) => {
-      switch (e.data.type) {
-        case MessageTypes.DOWNLOADING:
-          setDownloading(true);
-          break;
-        case MessageTypes.LOADING:
-          setLoading(true);
-          break;
-        case MessageTypes.RESULT:
-          setOutput(e.data.results);
-          setTranscription(e.data.results);
-          break;
-        case MessageTypes.INFERENCE_DONE:
-          setFinished(true);
-          break;
-      }
-    };
-
-    worker.current.addEventListener('message', onMessageReceived);
-
-    return () => worker.current?.removeEventListener('message', onMessageReceived);
-  }, []);
-
-  interface ReadAudioFromParams {
-    file: Blob;
+  interface HandleOnStopSubmissionProps {
+    audioBlob: Blob;
   }
 
-  async function readAudioFrom({ file }: ReadAudioFromParams): Promise<Float32Array> {
-    const sampling_rate = 16000;
-    const audioCTX = new AudioContext({ sampleRate: sampling_rate });
-    const response = await file.arrayBuffer();
-    const decoded = await audioCTX.decodeAudioData(response);
-    const audio = decoded.getChannelData(0);
-    return audio;
+  interface ResponseData {
+    status: string;
+    data: any;
   }
+
+  async function handleOnStopSubmission(audioBlob: HandleOnStopSubmissionProps['audioBlob']) {
+    if (!audioStream && !audioBlob) {
+      console.log(audioStream)
+      console.log("No audio stream available");
+      return;
+    }
+    const formData = new FormData();
+    
+    if (audioStream) {
+      formData.append('audio_file', audioStream);
+    }
+    const response = await fetch('http://localhost:8000/note/audio_upload', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: formData
+    });
+    const data: ResponseData = await response.json();
+    if (data.status === 'success') {
+      setOutput(data.data);
+      console.log(output);
+    }
+  }
+
 
   async function handleFormSubmission() {
     if (!audioStream) {
       console.log("No audio stream available");
       return;
-    }
-
-    let audio;
-    try {
-      audio = await readAudioFrom({ file: audioStream });
-    } catch (error) {
-      console.error("Error reading audio data:", error);
-      return;
-    }
-
-    const model_name = `openai/whisper-tiny.en`;
-
-    if (worker.current) {
-      worker.current.postMessage({
-        type: MessageTypes.INFERENCE_REQUEST,
-        audio,
-        model_name
-      });
     }
   }
 
@@ -125,7 +90,7 @@ const VoiceRecording = () => {
     };
   }, [isRecording, isPaused]);
 
-  const handleStartPlayPause = () => {
+  const handleStartPlayPause = async () => {
     if (!isRecording && !audioURL) {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
@@ -138,6 +103,7 @@ const VoiceRecording = () => {
             const url = URL.createObjectURL(audioBlob);
             setAudioURL(url);
             setAudioStream(audioBlob);
+            handleOnStopSubmission(audioBlob)
             audioChunksRef.current = [];
           };
           mediaRecorderRef.current.start();
@@ -194,13 +160,8 @@ const VoiceRecording = () => {
             Stop
           </button>
         </div>
-        {output ? (
-          <p>{output}</p>
-        ) : loading ? (
-          <p>Loading</p>
-        ) : isAudioAvailable ? (
-          <TestMe/>
-          // <Transcribing output={output} handleFormSubmission={handleFormSubmission} handleAudioReset={handleAudioReset} audioStream={audioStream} />
+        {isAudioAvailable ? (
+           <Transcribing output={output} handleFormSubmission={handleFormSubmission} handleAudioReset={handleAudioReset} audioStream={audioStream} />
         ) : (
           <p>none</p>
         )}

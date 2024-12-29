@@ -5,11 +5,13 @@ from sqlalchemy.orm import Session
 from utils import auth, security
 from database import get_db
 from typing import List
-from models.notes_model import Category
+from models.notes_model import Category, Audio, Note
 from schemas import notes_schema, user_schema
 import shutil
 from fastapi import UploadFile, File
-
+from fastapi.responses import StreamingResponse
+import shutil
+import os
 
 router = APIRouter()
 
@@ -48,10 +50,90 @@ async def user_category_delete(category_id: int, db : Session = Depends(get_db),
         "detail": "delete successful"
     }
 
+
 @router.post("/note/audio_upload")
-async def note_audio_upload(audio_file: UploadFile = File(...), db : Session = Depends(get_db), current_user: user_schema.UserInDBBase = Depends(auth.get_current_user)):
+async def note_audio_upload(
+    audio_file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: user_schema.UserInDBBase = Depends(auth.get_current_user),
+):
     if not current_user:
-        raise HTTPException(status_code=401, detail="user not authorized")
-    audio_path = f"audio/{audio_file.filename}"
-    with open(audio_path, "wb") as file_object:
-        shutil.copyfileobj(audio_file.file, file_object)
+        raise HTTPException(status_code=401, detail="User not authorized")
+    
+    # Define the audio directory and file path
+    audio_dir = "audio"
+    os.makedirs(audio_dir, exist_ok=True)
+    audio_path = os.path.join(audio_dir, audio_file.filename)
+    
+    
+    # Save the uploaded audio file
+    try:
+        with open(audio_path, "wb") as file_object:
+            shutil.copyfileobj(audio_file.file, file_object)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
+    finally:
+        audio_file.file.close()
+
+    # Add audio record to the database
+    audio = Audio(audio_path=audio_path, owner_id=current_user.id)
+    db.add(audio)
+    db.commit()
+    db.refresh(audio)
+    
+    return {
+        "status_code": 200,
+        "data": audio,
+        "detail": "Audio uploaded successfully",
+    }
+
+
+    
+# from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException
+# from fastapi.responses import HTMLResponse
+# from pathlib import Path
+# from utils import auth
+# from schemas import user_schema
+# import logging
+
+# app = FastAPI()
+
+# # Directory to save streamed audio
+# UPLOAD_DIRECTORY = "uploaded_audio"
+# Path(UPLOAD_DIRECTORY).mkdir(exist_ok=True)
+# @app.websocket("/ws/audio-stream/")
+# async def websocket_audio_stream(websocket: WebSocket):
+#     try:
+#         await websocket.accept()
+        
+#         # Wait for the initial authentication message
+#         auth_message = await websocket.receive_json()
+#         if auth_message.get("type") != "authenticate" or "accessToken" not in auth_message:
+#             logging.info("Invalid authentication message")
+#             await websocket.close(code=1008)  # Policy Violation
+#             raise HTTPException(status_code=401, detail="Authentication failed")
+        
+#         # Validate the access token
+#         access_token = auth_message["accessToken"]
+#         current_user = auth.get_current_user(token=access_token)
+#         if not current_user:
+#             logging.info("Unauthorized user")
+#             await websocket.close(code=1008)  # Policy Violation
+#             raise HTTPException(status_code=401, detail="User not authorized")
+        
+#         logging.info(f"User {current_user['username']} authenticated")
+
+#         # Proceed with handling audio streaming
+#         file_path = Path(UPLOAD_DIRECTORY) / "streamed_audio.raw"
+#         with open(file_path, "wb") as f:
+#             while True:
+#                 try:
+#                     # Receive and save audio chunks
+#                     audio_chunk = await websocket.receive_bytes()
+#                     f.write(audio_chunk)
+#                 except WebSocketDisconnect:
+#                     logging.info("WebSocket disconnected")
+#                     break
+#     except Exception as e:
+#         logging.error(f"Error: {str(e)}")
+#         await websocket.close(code=1011)  # Internal Error

@@ -15,7 +15,7 @@ load_dotenv()
 app = FastAPI()
 
 # Secret key to encode and decode JWT tokens
-ACCESS_TOKEN_EXPIRE_MINUTES = 1 # 30 minutes
+ACCESS_TOKEN_EXPIRE_MINUTES = 30 # 30 minutes
 REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days
 ALGORITHM = "HS256"
 JWT_SECRET_KEY = os.environ['secret_key']   # should be kept secret

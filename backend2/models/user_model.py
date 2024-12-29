@@ -15,6 +15,8 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     categories = relationship("Category", back_populates="owner")
+    audios = relationship("Audio", back_populates="owner")
+    notes = relationship("Note", back_populates="owner")
     role = Column(SQLEnum(UserRole))
     
 class Token(Base):
