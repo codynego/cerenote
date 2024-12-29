@@ -24,6 +24,20 @@ const VoiceRecording = () => {
     setAudioStream(null);
   }
 
+  interface ReadAudioFromProps {
+    file: Blob;
+  }
+
+  async function readAudioFrom({ file }: ReadAudioFromProps): Promise<Float32Array> {
+    const sampling_rate = 16000;
+    const audioCTX = new AudioContext({ sampleRate: sampling_rate });
+    const response = await file.arrayBuffer();
+    const decoded = await audioCTX.decodeAudioData(response);
+    const audio = decoded.getChannelData(0);
+    return audio;
+  }
+
+
   interface HandleOnStopSubmissionProps {
     audioBlob: Blob;
   }
@@ -40,14 +54,18 @@ const VoiceRecording = () => {
     }
     const formData = new FormData();
     const uniqueFileName = `audio_${Date.now()}.wav`
-    
+    console.log("getting audio")
+    // let audio = await readAudioFrom({ file: audioStream ? audioStream : audioBlob });
+
     if (audioBlob) {
+      // const audioBlobFromArray = new Blob([audio], { type: 'audio/wav' });
+      console.log(audioBlob)
       formData.append('audio_file', audioBlob, uniqueFileName);
     }
     const response = await fetch('http://localhost:8000/note/audio_upload', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
       },
       body: formData
     });
@@ -113,6 +131,7 @@ const VoiceRecording = () => {
       setIsPaused(false);
     } else if (audioURL) {
       const audio = new Audio(audioURL);
+      console.log("new audio", audio)
       if (audio.paused) {
         audio.play();
       } else {

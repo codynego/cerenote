@@ -13,23 +13,10 @@ from fastapi.responses import StreamingResponse
 import shutil
 import os
 from audio import transcribe_audio
-import soundfile as sf
+from pydub import AudioSegment
+
 
 router = APIRouter()
-
-
-def reencode_audio_with_soundfile(input_path: str, output_path: str):
-    """
-    Re-encodes the audio file using soundfile to ensure compatibility.
-    Parameters:
-        input_path (str): Path to the original uploaded audio file.
-        output_path (str): Path to save the re-encoded audio file.
-    """
-    try:
-        data, samplerate = sf.read(input_path)
-        sf.write(output_path, data, samplerate=44100, format='WAV', subtype='PCM_16')  # Standardize to 44.1kHz WAV
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error during audio re-encoding: {str(e)}")
 
 
 
@@ -68,6 +55,14 @@ async def user_category_delete(category_id: int, db : Session = Depends(get_db),
     }
 
 
+
+def convert_to_wav(input_file):
+    audio = AudioSegment.from_file(input_file)
+    base_name = os.path.splitext(input_file)[0]
+    output_file = f"{base_name}.wav"
+    audio.export(output_file, format="wav")
+    return output_file
+
 @router.post("/note/audio_upload")
 async def note_audio_upload(
     audio_file: UploadFile = File(...),
@@ -77,35 +72,24 @@ async def note_audio_upload(
     if not current_user:
         raise HTTPException(status_code=401, detail="User not authorized")
     
-    # Define directories and file paths
     audio_dir = "audio"
     os.makedirs(audio_dir, exist_ok=True)
-    original_path = os.path.join(audio_dir, audio_file.filename)
-    reencoded_path = os.path.join(audio_dir, f"reencoded_{audio_file.filename}")
+    audio_path = os.path.join(audio_dir, audio_file.filename)
+    print(audio_file.filename)
     
-    print(f"Uploaded file: {audio_file.filename}, Content-Type: {audio_file.content_type}")
-    
-    # Save the uploaded audio file
     try:
-        with open(original_path, "wb") as file_object:
+        with open(audio_path, "wb") as file_object:
             shutil.copyfileobj(audio_file.file, file_object)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
     finally:
         audio_file.file.close()
-    
-    # Re-encode the audio file
-    try:
-        reencode_audio_with_soundfile(original_path, reencoded_path)
-    except HTTPException as e:
-        raise e
-    finally:
-        # Remove the original file after re-encoding to save space
-        if os.path.exists(original_path):
-            os.remove(original_path)
 
-    # Add re-encoded audio record to the database
-    audio = Audio(audio_path=reencoded_path, owner_id=current_user.id)
+    # Convert the audio file to .wav format
+    wav_audio_path = convert_to_wav(audio_path)
+
+    # Add audio record to the database
+    audio = Audio(audio_path=wav_audio_path, owner_id=current_user.id)
     db.add(audio)
     db.commit()
     db.refresh(audio)
@@ -113,9 +97,8 @@ async def note_audio_upload(
     return {
         "status_code": 200,
         "data": audio.id,
-        "detail": "Audio uploaded and re-encoded successfully",
+        "detail": "Audio uploaded and converted to .wav successfully",
     }
-
 
 @router.post("/note/transcribe")
 async def note_audio_transcribe(
@@ -128,15 +111,14 @@ async def note_audio_transcribe(
     
     # Fetch the audio record
     audio = db.query(Audio).filter(Audio.id == audio_id).first()
-    
     if not audio:
         raise HTTPException(status_code=404, detail="Audio not found")
     
-    path  = audio.audio_path.split("\\")[-1]
-    print(audio.audio_path)
+    # path  = audio.audio_path.split("\\")[-1]
+    # print(audio.audio_path)
     
     # Transcribe the audio file
-    transcribed_text = transcribe_audio(path)
+    transcribed_text = transcribe_audio(audio.audio_path)
     return {
         "status_code": 200,
         "data": transcribed_text,
