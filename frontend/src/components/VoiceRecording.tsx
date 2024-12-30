@@ -52,7 +52,7 @@ const VoiceRecording = () => {
   }
 
   interface ResponseData {
-    status: string;
+    status_code: number;
     data: any;
   }
 
@@ -78,10 +78,10 @@ const VoiceRecording = () => {
       },
       body: formData
     });
-    const data: ResponseData = await response.json();
-    if (data) {
-      setOutput(data.data);
-      console.log(data);
+    const responseData: ResponseData = await response.json();
+    if (responseData) {
+      setOutput(responseData.data);
+      console.log(responseData);
       if (output && output.status_code === 200) {
         setTranscribing(true);
         const trans_response = await fetch('http://localhost:8000/note/transcribe', {
@@ -91,12 +91,13 @@ const VoiceRecording = () => {
           },
           body: JSON.stringify({ 'audio_id': output.data.audio_id })
         });
-        if (trans_response) {
+        const data: ResponseData = await trans_response.json();
+        if (data) {
           setTranscribing(false);
-          if (trans_response.data.status_code === 200) {
-            const transData = await trans_response.json();
-            setTranscription(transData.data.text);
+          if (data.status_code === 200) {
+            setTranscription(data.data.text);
       }
+    }}
       
     }
   }
@@ -199,7 +200,7 @@ const VoiceRecording = () => {
                 }
               </div> : null}
             {isAudioAvailable ? (
-              <AudioElement audioStream={audioStream} />
+              <AudioElement audioStream={audioStream} transcribing={}/>
           //  <Transcribing output={output} handleFormSubmission={handleFormSubmission} handleAudioReset={handleAudioReset} audioStream={audioStream} />
             ) : null}
           </div>
