@@ -31,24 +31,14 @@ export const AudioElement: React.FC<AudioElementProps> = ({ audioStream }) => {
     }
   };
 
-  // Toggle play/pause state
-  const togglePlay = () => {
-    if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
 
   // Handle seeking (when user interacts with the progress bar)
-  const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (audioRef.current) {
-      const newTime = (audioRef.current.duration * parseFloat(event.target.value)) / 100;
-      audioRef.current.currentTime = newTime;
-    }
-  };
+  // const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   if (audioRef.current) {
+  //     const newTime = (audioRef.current.duration * parseFloat(event.target.value)) / 100;
+  //     audioRef.current.currentTime = newTime;
+  //   }
+  // };
 
   return (
     <div className="w-full">
@@ -57,12 +47,12 @@ export const AudioElement: React.FC<AudioElementProps> = ({ audioStream }) => {
         ref={audioRef}
         className="w-full bg-transparent"
         controls
-        onTimeUpdate={handleTimeUpdate} // Update progress bar as audio plays
+        // onTimeUpdate={handleTimeUpdate} // Update progress bar as audio plays
       >
         Your browser does not support the audio element.
       </audio>
 
-      {/* Custom Play/Pause Button */}
+      {/* Custom Play/Pause Button
       <div className="flex justify-center mt-4">
         <button
           onClick={togglePlay}
@@ -70,7 +60,7 @@ export const AudioElement: React.FC<AudioElementProps> = ({ audioStream }) => {
         >
           {isPlaying ? 'Pause' : 'Play'}
         </button>
-      </div>
+      </div> */}
 
     </div>
   );

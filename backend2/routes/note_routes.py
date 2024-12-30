@@ -56,12 +56,40 @@ async def user_category_delete(category_id: int, db : Session = Depends(get_db),
 
 
 
-def convert_to_wav(input_file):
-    audio = AudioSegment.from_file(input_file)
-    base_name = os.path.splitext(input_file)[0]
-    output_file = f"{base_name}.wav"
-    audio.export(output_file, format="wav")
-    return output_file
+def convert_to_wav(input_file, output_folder="audio"):
+    """
+    Converts an audio file to .wav format.
+
+    Args:
+        input_file (str): Path to the input audio file.
+        output_folder (str): Directory where the converted .wav file will be saved.
+
+    Returns:
+        str: Path to the converted .wav file.
+    """
+    input_file = os.path.abspath(input_file)
+    print(f"Absolute path: {os.path.abspath(input_file)}")
+
+    if not os.path.exists(input_file):
+        raise FileNotFoundError(f"Input file '{input_file}' does not exist.")
+
+    # Ensure output folder exists
+    os.makedirs(output_folder, exist_ok=True)
+
+    # Extract the filename without extension
+    filename = os.path.splitext(os.path.basename(input_file))[0]
+
+    # Define the output .wav file path
+    output_file = os.path.join(output_folder, f"{filename}.wav")
+
+    # Load the input file and export it as .wav
+    try:
+        audio = AudioSegment.from_file(input_file)
+        audio.export(output_file, format="wav")
+        print(f"Conversion successful: {output_file}")
+        return output_file
+    except Exception as e:
+        raise RuntimeError(f"Failed to convert {input_file} to .wav: {e}")
 
 @router.post("/note/audio_upload")
 async def note_audio_upload(
@@ -72,7 +100,7 @@ async def note_audio_upload(
     if not current_user:
         raise HTTPException(status_code=401, detail="User not authorized")
     
-    audio_dir = "audio"
+    audio_dir = "audio/"
     os.makedirs(audio_dir, exist_ok=True)
     audio_path = os.path.join(audio_dir, audio_file.filename)
     print(audio_file.filename)
@@ -85,11 +113,11 @@ async def note_audio_upload(
     finally:
         audio_file.file.close()
 
-    # Convert the audio file to .wav format
-    wav_audio_path = convert_to_wav(audio_path)
+    # # Convert the audio file to .wav format
+    # wav_audio_path = convert_to_wav(audio_path)
 
     # Add audio record to the database
-    audio = Audio(audio_path=wav_audio_path, owner_id=current_user.id)
+    audio = Audio(audio_path=audio_path, owner_id=current_user.id)
     db.add(audio)
     db.commit()
     db.refresh(audio)
@@ -123,6 +151,17 @@ async def note_audio_transcribe(
         "status_code": 200,
         "data": transcribed_text,
         "detail": "Audio transcribed successfully",
+    }
+
+
+
+@router.get("/audios")
+async def get_audios(db: Session = Depends(get_db), current_user: user_schema.UserInDBBase = Depends(auth.get_current_user)):
+    audios = db.query(Audio).filter(Audio.owner_id == current_user.id).all()
+    return {
+        "status_code": 200,
+        "data": audios,
+        "detail": "Audio files fetched successfully",
     }
 
 

@@ -10,9 +10,18 @@ const VoiceRecording = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [transcription, setTranscription] = useState<string | null>(null);
+  const [transcribing, setTranscribing] = useState(false);
   // const [transcription, setTranscription] = useState<string | null>(null);
   const [audioStream, setAudioStream] = useState<Blob | null>(null);
-  const [output, setOutput] = useState(null);
+  interface OutputData {
+    status_code: number;
+    data: {
+      audio_id: string;
+    };
+  }
+
+  const [output, setOutput] = useState<OutputData | null>(null);
   // const [downloading, setDownloading] = useState(false);
   // const [loading, setLoading] = useState(false);
   // const [finished, setFinished] = useState(false);
@@ -28,14 +37,14 @@ const VoiceRecording = () => {
     file: Blob;
   }
 
-  async function readAudioFrom({ file }: ReadAudioFromProps): Promise<Float32Array> {
-    const sampling_rate = 16000;
-    const audioCTX = new AudioContext({ sampleRate: sampling_rate });
-    const response = await file.arrayBuffer();
-    const decoded = await audioCTX.decodeAudioData(response);
-    const audio = decoded.getChannelData(0);
-    return audio;
-  }
+  // async function readAudioFrom({ file }: ReadAudioFromProps): Promise<Float32Array> {
+  //   const sampling_rate = 16000;
+  //   const audioCTX = new AudioContext({ sampleRate: sampling_rate });
+  //   const response = await file.arrayBuffer();
+  //   const decoded = await audioCTX.decodeAudioData(response);
+  //   const audio = decoded.getChannelData(0);
+  //   return audio;
+  // }
 
 
   interface HandleOnStopSubmissionProps {
@@ -53,7 +62,7 @@ const VoiceRecording = () => {
       return;
     }
     const formData = new FormData();
-    const uniqueFileName = `audio_${Date.now()}.wav`
+    const uniqueFileName = `audio-${Date.now()}.wav`
     console.log("getting audio")
     // let audio = await readAudioFrom({ file: audioStream ? audioStream : audioBlob });
 
@@ -73,6 +82,22 @@ const VoiceRecording = () => {
     if (data) {
       setOutput(data.data);
       console.log(data);
+      if (output && output.status_code === 200) {
+        setTranscribing(true);
+        const trans_response = await fetch('http://localhost:8000/note/transcribe', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({ 'audio_id': output.data.audio_id })
+        });
+        if (trans_response) {
+          setTranscribing(false);
+          if (trans_response.data.status_code === 200) {
+            const transData = await trans_response.json();
+            setTranscription(transData.data.text);
+      }
+      
     }
   }
 

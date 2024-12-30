@@ -2,6 +2,8 @@ from transformers import pipeline
 import soundfile as sf
 import librosa
 import numpy as np
+from pydub import AudioSegment
+import os
 
 # Initialize the ASR pipeline
 asr_pipeline = pipeline(
@@ -10,6 +12,19 @@ asr_pipeline = pipeline(
 )
 
 def transcribe_audio(file_path):
+    # Ensure the file format is supported
+    supported_formats = ['.wav', '.mp3', '.flac', '.ogg', '.m4a', '.aac']
+    file_ext = os.path.splitext(file_path)[-1].lower()
+    
+    if file_ext not in supported_formats:
+        raise ValueError(f"Unsupported audio format: {file_ext}. Supported formats are: {supported_formats}")
+    
+    # Convert unsupported formats to WAV using pydub
+    if file_ext == '.wav':
+        audio = AudioSegment.from_file(file_path)
+        file_path = file_path.replace(file_ext, ".wav")
+        audio.export(file_path, format="wav")
+    
     # Load the audio file
     audio_input, sample_rate = sf.read(file_path)
 
@@ -31,31 +46,6 @@ def transcribe_audio(file_path):
         generate_kwargs={"max_new_tokens": 256},
         return_timestamps=True,
     )
-    print("audio transcibed")
+    
+    print("Audio transcribed successfully.")
     return transcription
-
-# # Example usage
-# file_path = "audio_1735507110280.wav"
-# transcription = transcribe_audio(file_path)
-# print(transcription)
-
-
-from pydub import AudioSegment
-import os
-
-def convert_to_wav(input_file):
-    # Load the audio file
-    audio = AudioSegment.from_file(input_file)
-    
-    # Get the base name of the file without extension
-    base_name = os.path.splitext(input_file)[0]
-    
-    # Create the output file name with .wav extension
-    output_file = f"{base_name}.wav"
-    
-    # Export the audio file as .wav
-    audio.export(output_file, format="wav")
-    print(f"Converted {input_file} to {output_file}")
-
-# Example usage
-# convert_to_wav("input_audio.mp3")
