@@ -128,7 +128,7 @@ async def note_audio_upload(
         "detail": "Audio uploaded and converted to .wav successfully",
     }
 
-@router.post("/note/transcribe")
+@router.get("/note/transcribe")
 async def note_audio_transcribe(
     audio_id: int,
     db: Session = Depends(get_db),

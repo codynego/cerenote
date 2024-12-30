@@ -10,8 +10,7 @@ const VoiceRecording = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [transcription, setTranscription] = useState<string | null>(null);
-  const [transcribing, setTranscribing] = useState(false);
+
   // const [transcription, setTranscription] = useState<string | null>(null);
   const [audioStream, setAudioStream] = useState<Blob | null>(null);
   interface OutputData {
@@ -82,22 +81,6 @@ const VoiceRecording = () => {
     if (responseData) {
       setOutput(responseData.data);
       console.log(responseData);
-      if (output && output.status_code === 200) {
-        setTranscribing(true);
-        const trans_response = await fetch('http://localhost:8000/note/transcribe', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({ 'audio_id': output.data.audio_id })
-        });
-        const data: ResponseData = await trans_response.json();
-        if (data) {
-          setTranscribing(false);
-          if (data.status_code === 200) {
-            setTranscription(data.data.text);
-      }
-    }}
       
     }
   }
@@ -200,7 +183,7 @@ const VoiceRecording = () => {
                 }
               </div> : null}
             {isAudioAvailable ? (
-              <AudioElement audioStream={audioStream} transcribing={}/>
+              <AudioElement audioStream={audioStream} output={output}/>
           //  <Transcribing output={output} handleFormSubmission={handleFormSubmission} handleAudioReset={handleAudioReset} audioStream={audioStream} />
             ) : null}
           </div>
