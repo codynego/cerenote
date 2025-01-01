@@ -64,7 +64,7 @@ export const Editor: React.FC = () => {
     <div className="editor-wrapper flex flex-col h-screen w-screen">
       {/* Header Bar */}
       <div className="editor-header flex items-center px-4 py-2 bg-gray-100 shadow">
-        <div className="editor-logo font-bold text-xl mr-4">CereNote</div>
+        <div className="editor-logo font-bold text-3xl text-blue-950 mr-4">CereNote</div>
         <div className='flex justify-between w-full'>
           <input
             type="text"
@@ -112,14 +112,14 @@ export const Editor: React.FC = () => {
         {/* Right Sidebar */}
         <div className={`editor-right-sidebar ${isRightSidebarOpen ? 'w-1/5' : 'w-0'} transition-all duration-300 bg-gray-200 p-4 shadow-inner`}>
           <button 
-            className="toggle-right-sidebar-btn mb-4 px-1 py-1  rounded-md hover:bg-blue-950 hover:text-white"
+            className="toggle-right-sidebar-btn mb-4 px-1 py-1 rounded-md bg-blue-950 hover:bg-red-600"
             onClick={toggleRightSidebar}
           >
             {/* FontAwesome icon for right sidebar open/close */}
             {isRightSidebarOpen ? (
-               <i className="fas fa-times h-6 w-6 text-blue-950 text-center hover:text-white"></i>  //
+               <i className="fas fa-times h-4 w-4 text-white "></i>  // Close icon  //
             ) : (
-              <FloatingBtn />  // Open icon
+              <FloatingBtn />
             )}
           </button>
           {isRightSidebarOpen && (
