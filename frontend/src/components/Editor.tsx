@@ -2,18 +2,50 @@ import React, { useEffect, useRef, useState } from 'react';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
 import '../styles/editor.css'; // Ensure you style it appropriately
+import { FloatingBtn } from './FloatingBtn';
+import AiChat from './AiChat';
 
 export const Editor: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isRightSidebarOpen, setRightSidebarOpen] = useState(true);
 
   useEffect(() => {
     if (editorRef.current) {
-      new Quill(editorRef.current, {
+      const quill = new Quill(editorRef.current, {
         theme: 'snow',
         modules: {
-          toolbar: '#quill-toolbar', // Connect the toolbar using its ID
-        },
+          toolbar: [
+            [
+              { header: [1, 2, 3, false] },
+              { font: [] },
+              { size: ['small', false, 'large', 'huge'] }
+            ],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ color: [] }, { background: [] }],
+            [{ script: 'sub' }, { script: 'super' }],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            [{ indent: '-1' }, { indent: '+1' }],
+            [{ align: [] }],
+            ['link', 'image'],
+            ['clean']
+          ]
+        }
+      });
+
+      const toolbar = document.querySelector('.ql-toolbar');
+      let savedRange : any = null;
+
+      // Save the current selection when clicking on the toolbar
+      toolbar?.addEventListener('mousedown', () => {
+        savedRange = quill.getSelection();
+      });
+
+      // Restore the selection after interacting with the toolbar
+      toolbar?.addEventListener('mouseup', () => {
+        if (savedRange) {
+          quill.setSelection(savedRange);
+        }
       });
     }
   }, []);
@@ -22,11 +54,15 @@ export const Editor: React.FC = () => {
     setSidebarOpen(!isSidebarOpen);
   };
 
+  const toggleRightSidebar = () => {
+    setRightSidebarOpen(!isRightSidebarOpen);
+  };
+
   return (
     <div className="editor-wrapper flex flex-col h-screen w-screen">
       {/* Header Bar */}
       <div className="editor-header flex items-center px-4 py-2 bg-gray-100 shadow">
-        <div className="editor-logo font-bold text-xl mr-4">Google Docs Clone</div>
+        <div className="editor-logo font-bold text-xl mr-4">CereNote</div>
         <input
           type="text"
           placeholder="Untitled Document"
@@ -49,62 +85,55 @@ export const Editor: React.FC = () => {
         <button className="menu-item">Help</button>
       </div>
 
-      {/* Toolbar */}
-      <div id="quill-toolbar" className="editor-toolbar bg-gray-600 shadow-sm">
-        <span className="ql-formats">
-          <select className="ql-header">
-            <option value="1"></option>
-            <option value="2"></option>
-            <option selected></option>
-          </select>
-          <select className="ql-font"></select>
-          <select className="ql-size">
-            <option value="small"></option>
-            <option selected></option>
-            <option value="large"></option>
-            <option value="huge"></option>
-          </select>
-        </span>
-        <span className="ql-formats">
-          <button className="ql-bold"></button>
-          <button className="ql-italic"></button>
-          <button className="ql-underline"></button>
-          <button className="ql-strike"></button>
-        </span>
-        <span className="ql-formats">
-          <select className="ql-color"></select>
-          <select className="ql-background"></select>
-        </span>
-        <span className="ql-formats">
-          <button className="ql-script" value="sub"></button>
-          <button className="ql-script" value="super"></button>
-        </span>
-        <span className="ql-formats">
-          <button className="ql-link"></button>
-          <button className="ql-image"></button>
-        </span>
-      </div>
-
-      {/* Main Content with Sidebar and Editor */}
-      <div className="editor-main flex flex-grow">
-        {/* Sidebar */}
-        {isSidebarOpen && (
-          <div className="editor-sidebar w-1/5 bg-gray-200 p-4 shadow-inner">
-            <button
-              className="toggle-sidebar-btn mb-4 px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
-              onClick={toggleSidebar}
-            >
-              Collapse
-            </button>
-            <div className="sidebar-item py-2 px-3 hover:bg-gray-300 rounded cursor-pointer">Outline</div>
-            <div className="sidebar-item py-2 px-3 hover:bg-gray-300 rounded cursor-pointer">Comments</div>
-            <div className="sidebar-item py-2 px-3 hover:bg-gray-300 rounded cursor-pointer">Bookmarks</div>
-          </div>
-        )}
+      {/* Main Content with Sidebars and Editor */}
+      <div className="editor-main flex flex-grow overflow-hidden">
+        {/* Left Sidebar */}
+        <div className={`editor-sidebar ${isSidebarOpen ? 'w-1/5' : 'w-0'} transition-all duration-300 bg-gray-200 p-4 shadow-inner`}>
+          <button 
+            className="toggle-sidebar-btn mb-4 px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+            onClick={toggleSidebar}
+          >
+            {/* FontAwesome icon for left sidebar open/close */}
+            {isSidebarOpen ? (
+              <i className="fas fa-times h-6 w-6 text-white"></i>  // Close icon
+            ) : (
+              <i className="fas fa-bars h-6 w-6 text-white"></i>  // Open icon
+            )}
+          </button>
+          {isSidebarOpen && (
+            <>
+              <div className="sidebar-item py-2 px-3 hover:bg-gray-300 rounded cursor-pointer">Outline</div>
+              <div className="sidebar-item py-2 px-3 hover:bg-gray-300 rounded cursor-pointer">Comments</div>
+              <div className="sidebar-item py-2 px-3 hover:bg-gray-300 rounded cursor-pointer">Bookmarks</div>
+            </>
+          )}
+        </div>
 
         {/* Editor Container */}
-        <div className={`editor-container flex-grow p-4 ${isSidebarOpen ? 'w-4/5' : 'w-full'}`}>
-          <div ref={editorRef} className="editor-content bg-white shadow-sm rounded h-full"></div>
+        <div className={`editor-container flex-grow p-4 overflow-hidden ${isSidebarOpen ? (isRightSidebarOpen ? 'w-3/5' : 'w-4/5') : (isRightSidebarOpen ? 'w-4/5' : 'w-full')}`}>
+          {/* Toolbar */}
+          <div className="editor-toolbar bg-gray-100 shadow-sm w-full fixed z-10 top-0"></div>
+          
+          {/* Editor Content */}
+          <div ref={editorRef} className="editor-content bg-white shadow-sm rounded h-full overflow-auto mt-[55px]"></div>
+        </div>
+
+        {/* Right Sidebar */}
+        <div className={`editor-right-sidebar ${isRightSidebarOpen ? 'w-1/5' : 'w-0'} transition-all duration-300 bg-gray-200 p-4 shadow-inner`}>
+          <button 
+            className="toggle-right-sidebar-btn mb-4 px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+            onClick={toggleRightSidebar}
+          >
+            {/* FontAwesome icon for right sidebar open/close */}
+            {isRightSidebarOpen ? (
+               <i className="fas fa-times h-6 w-6 text-white text-center"></i>  //
+            ) : (
+              <FloatingBtn />  // Open icon
+            )}
+          </button>
+          {isRightSidebarOpen && (
+            <AiChat />
+          )}
         </div>
       </div>
 
