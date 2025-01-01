@@ -4,6 +4,7 @@ import { Login } from "./pages/authentication/Login";
 import { Signup } from "./pages/authentication/Signup";
 import { AuthProvider } from "./context/AuthProvider";
 import { Dashboard } from "./pages/Dashboard";
+import { Editor } from "./components/Editor";
 
 import { useAuth } from '@/context/AuthProvider';
 import { Navigate } from 'react-router-dom';
@@ -28,6 +29,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
+          <Route path="/editor" element={<ProtectedRoute element={<Editor />} />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

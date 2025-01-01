@@ -1,0 +1,23 @@
+.ql-toolbar .ql-stroke {
+    stroke: white;
+  }
+  
+  .ql-toolbar .ql-fill {
+    fill: white;
+  }
+  
+  .ql-toolbar .ql-picker {
+    color: white;
+  }
+  
+  .ql-toolbar .ql-picker-options {
+    background-color: #333;
+  }
+  
+  .ql-toolbar .ql-picker-item {
+    color: white;
+  }
+  
+  .editor-container {
+    height: 100vh;
+  }
