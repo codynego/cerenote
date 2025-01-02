@@ -132,12 +132,16 @@ export const Editor: React.FC = () => {
             isRightSidebarOpen ? 'w-1/5' : 'w-0'
           } transition-all duration-300 bg-gray-200 p-4 shadow-inner`}
         >
-          <button
+          <div
             className="mb-4 px-1 py-1 rounded-md bg-blue-950 hover:bg-red-600"
             onClick={toggleRightSidebar}
           >
-            <i className={`fas ${isRightSidebarOpen ? 'fa-times' : 'fa-bars'} text-white`}></i>
-          </button>
+            {isRightSidebarOpen ?
+              <i className="fas fa-times text-white"></i>
+              : <FloatingBtn/>
+            } 
+            
+          </div>
           {isRightSidebarOpen && <AiChat />}
         </aside>
       </main>
