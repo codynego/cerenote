@@ -7,6 +7,7 @@ import AiChat from './AiChat';
 import LeftSidebar from './LeftSideBar';
 import EditorMenu from './EditorMenu';
 import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export const Editor: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -14,6 +15,7 @@ export const Editor: React.FC = () => {
   const [isRightSidebarOpen, setRightSidebarOpen] = useState(false);
   const [title, setTitle] = useState("Untitled Document");
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Safely retrieve the note from location state
   const note = location.state?.note; 
@@ -84,7 +86,7 @@ export const Editor: React.FC = () => {
     <div className="editor-wrapper flex flex-col h-screen w-screen">
       {/* Header Bar */}
       <div className="editor-header flex items-center px-4 py-2 bg-gray-100 shadow">
-        <div className="editor-logo font-bold text-3xl text-blue-950 mr-4">CereNote</div>
+        <div className="editor-logo font-bold text-3xl text-blue-950 mr-4 cursor-pointer" onClick={() => navigate("/dashboard")}>CereNote</div>
         <div className="flex justify-between w-full">
           <input
             type="text"
