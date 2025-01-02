@@ -1,16 +1,24 @@
 import { useRef, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface AudioElementProps {
   audioStream: Blob | null; // Handle the case of null audio stream
   output: any;
 }
 
+interface Note {
+  Content: string;
+  // Add other properties if needed
+}
+
 export const AudioElement: React.FC<AudioElementProps> = ({ audioStream, output }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0); // Track the audio progress
-  const [transcription, setTranscription] = useState<string | null>(null);
+  const [note, setNote] = useState<Note | null>({Content: 'hello there'}); // Default value
   const [transcribing, setTranscribing] = useState(false);
+  const navigate = useNavigate();
+
   console.log(output);
 
   // Handle stream change or playback logic
@@ -35,15 +43,6 @@ export const AudioElement: React.FC<AudioElementProps> = ({ audioStream, output 
     }
   };
 
-
-  // Handle seeking (when user interacts with the progress bar)
-  // const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   if (audioRef.current) {
-  //     const newTime = (audioRef.current.duration * parseFloat(event.target.value)) / 100;
-  //     audioRef.current.currentTime = newTime;
-  //   }
-  // };
-
   useEffect(() => {
     const fetchData = async () => {
       if (!output) return;
@@ -58,12 +57,17 @@ export const AudioElement: React.FC<AudioElementProps> = ({ audioStream, output 
         }
       });
       const data = await res.json();
-      setTranscription(data.data.text);
+      setNote(data.data); // Update note once data is fetched
       setTranscribing(false);
-    }
+    };
+
     fetchData();
-  }
-    , [output]);
+  }, [output]);
+
+  const handleNavigate = () => {
+    // Pass note as default or fetched state to the editor page
+    navigate('/editor', { state: { note: note || { Content: 'hello there' } } });
+  };
 
   return (
     <div className="w-full">
@@ -72,24 +76,19 @@ export const AudioElement: React.FC<AudioElementProps> = ({ audioStream, output 
         ref={audioRef}
         className="w-full bg-transparent"
         controls
-        // onTimeUpdate={handleTimeUpdate} // Update progress bar as audio plays
+        onTimeUpdate={handleTimeUpdate} // Update progress bar as audio plays
       >
         Your browser does not support the audio element.
       </audio>
       <div className='flex justify-center mt-4'>
-        <button className='bg-white text-blue-950 p-3 rounded-2xl' onClick={() => console.log(transcription)}>{transcribing ? "transcibing" : "show Transcription"}</button>
+          {
+            transcribing ? 
+            <div className='loader'></div> :
+            <div>
+              <button onClick={handleNavigate}>Go to Editor</button>
+            </div>
+          }
       </div>
-
-      {/* Custom Play/Pause Button
-      <div className="flex justify-center mt-4">
-        <button
-          onClick={togglePlay}
-          className="bg-green-600  text-white py-2 px-4 rounded-full w-20 h-20"
-        >
-          {isPlaying ? 'Pause' : 'Play'}
-        </button>
-      </div> */}
-
     </div>
   );
 };

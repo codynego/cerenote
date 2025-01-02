@@ -147,9 +147,14 @@ async def note_audio_transcribe(
     
     # Transcribe the audio file
     transcribed_text = transcribe_audio(audio.audio_path)
+    title = f"New Note {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    note = Note(title=title, content=transcribed_text['text'], owner_id=current_user.id, audio_id=audio_id, category_id=1)
+    db.add(note)
+    db.commit()
+    db.refresh(note)
     return {
         "status_code": 200,
-        "data": transcribed_text,
+        "data": note,
         "detail": "Audio transcribed successfully",
     }
 
