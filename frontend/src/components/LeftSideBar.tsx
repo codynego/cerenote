@@ -1,14 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaRegCommentDots, FaFileImage, FaClipboardList, FaEdit, FaCogs, FaExclamationCircle } from 'react-icons/fa';
 
-const LeftSidebar: React.FC = () => {
+interface LeftSidebarProps {
+    audioStream: Blob;
+}
+
+const LeftSidebar: React.FC<LeftSidebarProps> = ({ audioStream }) => {
   const [activeSection, setActiveSection] = useState<string>('summarization');
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Function to handle dropdown change
   const handleSectionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setActiveSection(event.target.value);
   };
 
+    useEffect(() => {
+        if (!audioStream || !audioRef.current) return;
+      // Create object URL for the audio stream
+      const audioUrl = URL.createObjectURL(audioStream);
+      audioRef.current.src = audioUrl;
+  
+      // Cleanup the object URL when component is unmounted or audio stream changes
+      return () => {
+        URL.revokeObjectURL(audioUrl);
+      };
+    }, [audioStream]);
   return (
     <div className="w-64 text-gray-800 pr-4 pl-4 h-full flex flex-col">
       {/* Sidebar Title */}
@@ -40,6 +56,14 @@ const LeftSidebar: React.FC = () => {
           <div>
             <h3 className="text-xl mb-2">Add Media</h3>
             <p>Add images, videos, and audio to enrich your note content. This helps in making your notes more visual and interactive.</p>
+            <audio
+                ref={audioRef}
+                className="w-full bg-transparent"
+                controls
+                // Update progress bar as audio plays
+            >
+                Your browser does not support the audio element.
+            </audio>
             <button className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Add Media</button>
           </div>
         )}

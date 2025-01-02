@@ -66,7 +66,8 @@ export const AudioElement: React.FC<AudioElementProps> = ({ audioStream, output 
 
   const handleNavigate = () => {
     // Pass note as default or fetched state to the editor page
-    navigate('/editor', { state: { note: note || { Content: 'hello there' } } });
+    console.log(audioStream)
+    navigate('/editor', { state: { note: note || { Content: 'hello there' }, audio: audioStream} });
   };
 
   return (
