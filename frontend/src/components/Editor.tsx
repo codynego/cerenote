@@ -16,12 +16,10 @@ export const Editor: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-
-
   const note = location.state?.note;
-
+  const template = location.state?.template;
   const audioStream = location.state?.audio;
-  console.log(audioStream)
+
   const initialContent = note?.content || "";
 
   useEffect(() => {
@@ -47,6 +45,11 @@ export const Editor: React.FC = () => {
         setTitle(note?.title ? note.title : "Untitled Document");
       }
 
+      if (template) {
+        console.log("Template", template);
+        quill.root.innerHTML = template; // Insert the template HTML
+      }
+
       quill.setText(initialContent);
       (editorRef.current as any).quill = quill;
 
@@ -67,8 +70,9 @@ export const Editor: React.FC = () => {
           quill.setSelection(savedRange);
         }
       });
+
     }
-  }, [initialContent]);
+  }, [initialContent, note, template]);
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
   const toggleRightSidebar = () => setRightSidebarOpen((prev) => !prev);
@@ -101,9 +105,7 @@ export const Editor: React.FC = () => {
       <main className="editor-main bg-gray-200 flex flex-grow overflow-hidden">
         {/* Left Sidebar */}
         <aside
-          className={`editor-sidebar relative ${
-            isSidebarOpen ? 'w-1/5' : 'w-0'
-          } transition-all duration-300 bg-gray-200 p-4 shadow-inner`}
+          className={`editor-sidebar relative ${isSidebarOpen ? 'w-1/5' : 'w-0'} transition-all duration-300 bg-gray-200 p-4 shadow-inner`}
         >
           <button
             className="absolute right-0 px-2 py-1 bg-blue-950 text-white rounded-md hover:bg-red-600"
@@ -135,19 +137,17 @@ export const Editor: React.FC = () => {
 
         {/* Right Sidebar */}
         <aside
-          className={`editor-right-sidebar ${
-            isRightSidebarOpen ? 'w-1/5' : 'w-0'
-          } transition-all duration-300 bg-gray-200 p-4 shadow-inner`}
+          className={`editor-right-sidebar ${isRightSidebarOpen ? 'w-1/5' : 'w-0'} transition-all duration-300 bg-gray-200 p-4 shadow-inner`}
         >
           <div
             className="mb-4 px-1 py-1 rounded-md bg-blue-950 hover:bg-red-600"
             onClick={toggleRightSidebar}
           >
-            {isRightSidebarOpen ?
+            {isRightSidebarOpen ? (
               <i className="fas fa-times text-white"></i>
-              : <FloatingBtn/>
-            } 
-            
+            ) : (
+              <FloatingBtn type={"chat"} />
+            )}
           </div>
           {isRightSidebarOpen && <AiChat />}
         </aside>

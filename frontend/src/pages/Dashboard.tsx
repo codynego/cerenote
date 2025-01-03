@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthProvider';
 // import { useNavigate } from "react-router-dom";
 import VoiceRecording from "@/components/VoiceRecording";
 import { useState } from "react";
+import Templates from "@/components/Templates";
 
 export const Dashboard = () => {
   const { isAuthenticated } = useAuth();
@@ -23,14 +24,14 @@ export const Dashboard = () => {
               <p className="absolute w-full text-4xl md:text-6xl opacity-5 text-center">New Notes</p>
             </div>
             <div>
-              
+              <Templates />
             </div>
-            <div className="mt-16">
+            <div className="mt-5">
               <ListNotes title={"Recent Notes"} />
               {/* <ListNotes title={"All Notes"} /> */}
             </div>
             <div onClick={() => setRecordState(true)} className="p-10">
-            <FloatingBtn/>
+            <FloatingBtn type={"record"}/>
             </div>
             {recordState ? <VoiceRecording/> : null
             }
