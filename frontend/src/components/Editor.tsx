@@ -16,7 +16,10 @@ export const Editor: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+
+
   const note = location.state?.note;
+
   const audioStream = location.state?.audio;
   console.log(audioStream)
   const initialContent = note?.content || "";
@@ -39,6 +42,10 @@ export const Editor: React.FC = () => {
           ],
         },
       });
+
+      if (note) {
+        setTitle(note?.title ? note.title : "Untitled Document");
+      }
 
       quill.setText(initialContent);
       (editorRef.current as any).quill = quill;
@@ -81,7 +88,7 @@ export const Editor: React.FC = () => {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="editor-title bg-transparent px-2 py-1 w-1/4 rounded-md focus:outline-none focus:ring border hover:border-2 border-blue-950"
+            className="editor-title bg-transparent px-2 py-1 w-1/4 rounded-md focus:outline-none focus:ring border hover:border-2 hover:border-blue-950"
           />
           <button className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Share</button>
         </div>

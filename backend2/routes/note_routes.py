@@ -39,6 +39,14 @@ async def user_category_get(db : Session = Depends(get_db), current_user: user_s
         "detail": "successful"
     }
 
+@router.get("/notes", response_model=dict())
+async def user_notes_get(db : Session = Depends(get_db), current_user: user_schema.UserInDBBase = Depends(auth.get_current_user)):
+    return {
+        "status_code": 200,
+        "data": current_user.notes,
+        "detail": "successful"
+    }
+
 @router.delete("/category/{category_id}")
 async def user_category_delete(category_id: int, db : Session = Depends(get_db), current_user: user_schema.UserInDBBase = Depends(auth.get_current_user)):
     #print(db.query(notes_model.Category).filter(owner_id=1))
