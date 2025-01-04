@@ -28,6 +28,11 @@ class NoteBase(BaseModel):
 class NoteCreate(NoteBase):
     pass
 
+class NoteUpdate(BaseModel):
+    id: int
+    title: str
+    content: str
+
 class NoteInDB(NoteBase):
     id: int
     owner_id : int

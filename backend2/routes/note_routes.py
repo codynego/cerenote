@@ -14,6 +14,7 @@ import shutil
 import os
 from audio import transcribe_audio
 from pydub import AudioSegment
+from utils.auth import verify_token, get_user
 
 
 router = APIRouter()
@@ -179,51 +180,89 @@ async def get_audios(db: Session = Depends(get_db), current_user: user_schema.Us
 
 
     
-# from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException
+import json
 # from fastapi.responses import HTMLResponse
 # from pathlib import Path
 # from utils import auth
 # from schemas import user_schema
 # import logging
 
-# app = FastAPI()
 
-# # Directory to save streamed audio
-# UPLOAD_DIRECTORY = "uploaded_audio"
-# Path(UPLOAD_DIRECTORY).mkdir(exist_ok=True)
-# @app.websocket("/ws/audio-stream/")
-# async def websocket_audio_stream(websocket: WebSocket):
-#     try:
-#         await websocket.accept()
-        
-#         # Wait for the initial authentication message
-#         auth_message = await websocket.receive_json()
-#         if auth_message.get("type") != "authenticate" or "accessToken" not in auth_message:
-#             logging.info("Invalid authentication message")
-#             await websocket.close(code=1008)  # Policy Violation
-#             raise HTTPException(status_code=401, detail="Authentication failed")
-        
-#         # Validate the access token
-#         access_token = auth_message["accessToken"]
-#         current_user = auth.get_current_user(token=access_token)
-#         if not current_user:
-#             logging.info("Unauthorized user")
-#             await websocket.close(code=1008)  # Policy Violation
-#             raise HTTPException(status_code=401, detail="User not authorized")
-        
-#         logging.info(f"User {current_user['username']} authenticated")
 
-#         # Proceed with handling audio streaming
-#         file_path = Path(UPLOAD_DIRECTORY) / "streamed_audio.raw"
-#         with open(file_path, "wb") as f:
-#             while True:
-#                 try:
-#                     # Receive and save audio chunks
-#                     audio_chunk = await websocket.receive_bytes()
-#                     f.write(audio_chunk)
-#                 except WebSocketDisconnect:
-#                     logging.info("WebSocket disconnected")
-#                     break
-#     except Exception as e:
-#         logging.error(f"Error: {str(e)}")
-#         await websocket.close(code=1011)  # Internal Error
+@router.websocket("/ws/editor/{token}")
+async def websocket_endpoint(websocket: WebSocket, token: str, db: Session = Depends(get_db)):
+    try:
+        # Verify the token
+        payload = verify_token(token)
+        await websocket.accept()
+        await websocket.send_json({'data': f'Welcome, {payload["sub"]}!'})
+        current_user = get_user(db, username=payload['sub'])
+
+        while True:
+            # Receive and parse the message
+            data = await websocket.receive_text()
+            
+            try:
+                parsed_data = json.loads(data)
+                note_id = parsed_data.get('id')
+                title = parsed_data.get('title')
+                content = parsed_data.get('content')
+
+                # Validate the required fields
+                if not content or not isinstance(content, str):
+                    await websocket.send_json({"data": "Invalid content field. Must be a non-empty string."})
+                    continue
+
+            except (ValueError, TypeError):
+                await websocket.send_json({"data": "Invalid data format. Expecting JSON with valid fields."})
+                continue
+
+            if note_id is None:
+                # Create a new note
+                
+                db_note = Note(
+                    title=title or "Untitled Document", 
+                    content=content, 
+                    owner_id=current_user.id, 
+                    audio_id=None, 
+                    category_id=1
+                )
+                db.add(db_note)
+
+            else:
+                # Find the note to update by ID
+                db_note = db.query(Note).filter(Note.id == note_id).first()
+                if db_note is None:
+                    await websocket.send_json({"data": f"Note with ID {note_id} not found."})
+                    continue
+
+                # Check if the user is authorized
+                if db_note.owner_id != current_user.id:  # Assuming 'sub' is the user ID
+                    await websocket.send_json({"data": "You are not authorized to update this note."})
+                    continue
+
+                # Update the note's content
+                db_note.title = title or db_note.title
+                db_note.content = content
+                db_note.updated_at = datetime.utcnow()
+
+            # Save and send confirmation
+            db.commit()
+            db.refresh(db_note)
+            r_note = {
+                "id": db_note.id,
+                "title": db_note.title,
+                "content": db_note.content,
+            }
+            await websocket.send_json({"remark": f"Note '{db_note.title}' updated successfully.", "note": r_note})
+
+    except HTTPException as e:
+        await websocket.close(code=1008)
+        print(f"Unauthorized: {e.detail}")
+
+    except WebSocketDisconnect:
+        print("WebSocket connection closed.")
+
+    finally:
+        db.close()
