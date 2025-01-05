@@ -35,6 +35,7 @@ export const Editor: React.FC = () => {
   const [note, setNote] = useState<{ id?: string; title?: string; content?: string; updated_at: string } | null>(null);
   const [messages, setMessages] = useState<string[]>([]);
   const [lastSaved, setLastSaved] = useState<string>(''); // Track last saved time
+  const [showActions, setShowActions] = useState(false); // State to control the visibility of action buttons
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -81,7 +82,7 @@ export const Editor: React.FC = () => {
     const ws = new WebSocket(`ws://localhost:8000/ws/editor/${token}`);
 
     ws.onopen = () => {
-      console.log(noteContent)
+      console.log(noteContent);
       console.log('WebSocket connection opened');
     };
 
@@ -123,7 +124,6 @@ export const Editor: React.FC = () => {
         quillRef.current.root.innerHTML = note?.content || '';
       }
 
-
       // Restore the cursor position after setting the content
       if (cursorPosition !== undefined) {
         quillRef.current.setSelection(cursorPosition);
@@ -158,6 +158,8 @@ export const Editor: React.FC = () => {
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
   const toggleRightSidebar = () => setRightSidebarOpen((prev) => !prev);
 
+  const handleOptionClick = () => setShowActions((prev) => !prev);
+
   return (
     <div className="editor-wrapper flex flex-col h-screen w-screen">
       {/* Header */}
@@ -169,21 +171,39 @@ export const Editor: React.FC = () => {
           CereNote
         </div>
         <div className="flex justify-between w-full">
-          <div className='grid grid-cols-3 gap-2 w-full'>
-          <input
-            type="text"
-            value={title || "Untitled Note"}
-            onChange={(e) => setTitle(e.target.value)}
-            className="editor-title bg-transparent px-2 py-1 w-1/4 rounded-md focus:outline-none focus:ring border hover:border-2 hover:border-blue-950 grid-cols-2 w-full"
-          />
-                    {/* Display Last Saved */}
-                    {lastSaved && (
-            <div className="text-xs text-gray-600 mt-2 mr-4">
-              Last saved: {getSecondsAgo(lastSaved)}
-            </div>
-          )}
+          <div className="grid grid-cols-3 gap-2 w-full">
+            <input
+              type="text"
+              value={title || 'Untitled Note'}
+              onChange={(e) => setTitle(e.target.value)}
+              className="editor-title bg-transparent px-2 py-1 w-1/4 rounded-md focus:outline-none focus:ring border hover:border-2 hover:border-blue-950 grid-cols-2 w-full"
+            />
+            {/* Display Last Saved */}
+            {lastSaved && (
+              <div className="text-xs text-gray-600 mt-2 mr-4">
+                Last saved: {getSecondsAgo(lastSaved)}
+              </div>
+            )}
           </div>
-          <button className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Share</button>
+
+          {/* Options Icon */}
+          <div className="relative">
+            <button
+              className="px-4 py-2 bg-gray-300 text-black rounded-md hover:bg-gray-400"
+              onClick={handleOptionClick}
+            >
+              ⋮
+            </button>
+
+            {/* Action Buttons (Edit, Delete, Share) */}
+            {showActions && (
+              <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md p-2">
+                <button className="block text-blue-500 hover:text-blue-700 mb-2">Edit</button>
+                <button className="block text-red-500 hover:text-red-700 mb-2">Delete</button>
+                <button className="block text-blue-500 hover:text-blue-700">Share</button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
