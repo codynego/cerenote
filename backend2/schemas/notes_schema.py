@@ -33,10 +33,13 @@ class NoteUpdate(BaseModel):
     title: str
     content: str
 
+    class Config:
+        from_attributes = True
+
 class NoteInDB(NoteBase):
     id: int
     owner_id : int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 

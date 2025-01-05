@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
 import '../styles/editor.css';
+import { debounce } from 'lodash';
 import { FloatingBtn } from './FloatingBtn';
 import AiChat from './AiChat';
 import LeftSidebar from './LeftSideBar';
@@ -10,22 +11,51 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 export const Editor: React.FC = () => {
   const editorRef = useRef<HTMLDivElement>(null);
+  const quillRef = useRef<Quill | null>(null);
+  const debouncedSend = useRef(
+    debounce((socket: WebSocket | null, noteId: string | undefined, title: string, content: any) => {
+      if (socket?.readyState === WebSocket.OPEN) {
+        const message = JSON.stringify({
+          id: noteId || null,
+          title: title,
+          content: content
+        });
+        console.log('Sending debounced message:', message);
+        socket.send(message);
+      } else {
+        console.log('WebSocket is not open. ReadyState:', socket?.readyState);
+      }
+    }, 2000) // 2-second debounce delay
+  ).current;
+
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isRightSidebarOpen, setRightSidebarOpen] = useState(false);
-  const [title, setTitle] = useState("Untitled Document");
-  const [socket, setSocket] = useState<WebSocket | null>(null); // WebSocket state
-  const [messages, setMessages] = useState<string[]>([]); // Store WebSocket messages
+  const [title, setTitle] = useState('');
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [note, setNote] = useState<{ id?: string; title?: string; content?: string; updated_at: string } | null>(null);
+  const [messages, setMessages] = useState<string[]>([]);
+  const [lastSaved, setLastSaved] = useState<string>(''); // Track last saved time
+
   const location = useLocation();
   const navigate = useNavigate();
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('token');
+  const noteContent = location.state?.note;
+  const noteId = noteContent?.id;
 
-  const note = location.state?.note;
   const template = location.state?.template;
   const audioStream = location.state?.audio;
-  const quillRef = useRef<Quill | null>(null);
 
+  // Function to calculate how many seconds ago the note was last saved
+  const getSecondsAgo = (lastSaved: string): string => {
+    const now = new Date();
+    const lastSavedDate = new Date(lastSaved);
+    const secondsAgo = Math.floor((now.getTime() - lastSavedDate.getTime()) / 1000);
+    return `${secondsAgo} seconds ago`;
+  };
+
+  // Initialize Quill Editor
   useEffect(() => {
-    if (editorRef.current && !quillRef.current ) {
+    if (editorRef.current && !quillRef.current) {
       const quill = new Quill(editorRef.current, {
         theme: 'snow',
         modules: {
@@ -42,59 +72,87 @@ export const Editor: React.FC = () => {
           ],
         },
       });
-
-     
-
-      if (note) {
-        setTitle(note?.title ? note.title : "Untitled Document");
-      }
-
-      if (template) {
-        quill.root.innerHTML = template; // Insert the template HTML
-      }
-
-      quill.setText(note.content || "");
-      (editorRef.current as any).quill = quill;
-
-      quill.on('text-change', () => {
-        const editorContent = quill.getText();
-        
-        // setTitle(editorContent.substring(0, 30) || "Untitled Document");
-        if (socket?.readyState === WebSocket.OPEN) {
-          const message = JSON.stringify({
-            id: note?.id || null,
-            title: title,
-            content: editorContent,
-          });
-          console.log("Sending message:", message);
-          socket.send(message);
-        } else {
-          console.log("WebSocket is not open. ReadyState:", socket?.readyState);
-        }
-      });
+      quillRef.current = quill;
     }
-  }, [note, title]);
+  }, []);
 
+  // Handle WebSocket connection
   useEffect(() => {
-    // Initialize WebSocket connection
     const ws = new WebSocket(`ws://localhost:8000/ws/editor/${token}`);
-    ws.onopen = () => console.log('WebSocket connection opened');
+
+    ws.onopen = () => {
+      console.log(noteContent)
+      console.log('WebSocket connection opened');
+    };
+
     ws.onmessage = (event) => {
-      // Handle incoming messages
-      console.log(event.data)
+      console.log('Received:', event.data);
       const data = JSON.parse(event.data);
+
+      // Update note state safely
+      setNote((prev) => (JSON.stringify(prev) !== JSON.stringify(data?.note) ? data?.note : prev));
       setMessages((prev) => [...prev, data.content]);
     };
+
     ws.onclose = () => console.log('WebSocket connection closed');
     ws.onerror = (error) => console.error('WebSocket error:', error);
 
     setSocket(ws);
 
     return () => {
-      // Cleanup WebSocket on component unmount
       ws.close();
     };
-  }, []);
+  }, [token]);
+
+  // Synchronize Quill content with the WebSocket
+  useEffect(() => {
+    if (noteContent && !note) {
+      setNote(noteContent);
+    }
+
+    if (quillRef.current) {
+      // Save the current cursor position
+      const cursorPosition = quillRef.current.getSelection()?.index;
+
+      // Set the content if note or title is updated
+      if (note && !title) {
+        setTitle(note?.title || '');
+        quillRef.current.root.innerHTML = note?.content || '';
+      } else if (note && title) {
+        setTitle(title);
+        quillRef.current.root.innerHTML = note?.content || '';
+      }
+
+      // Restore the cursor position after setting the content
+      if (cursorPosition !== undefined) {
+        quillRef.current.setSelection(cursorPosition);
+      }
+
+      // Handle template insertion
+      if (template) {
+        quillRef.current.root.innerHTML = template;
+      }
+
+      // Attach text-change listener
+      quillRef.current.on('text-change', () => {
+        const editorContent = quillRef.current?.getSemanticHTML() || '';
+        debouncedSend(socket, note?.id, title, editorContent);
+        // Update last saved time immediately
+        setLastSaved(new Date().toISOString());
+      });
+    }
+  }, [note, title, template]);
+
+  // Update last saved time every 5 seconds if no save occurs
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (lastSaved) {
+        setLastSaved(new Date().toISOString());
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [lastSaved]);
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
   const toggleRightSidebar = () => setRightSidebarOpen((prev) => !prev);
@@ -105,17 +163,25 @@ export const Editor: React.FC = () => {
       <header className="editor-header flex items-center px-4 py-2 bg-gray-100 shadow">
         <div
           className="editor-logo font-bold text-3xl text-blue-950 mr-4 cursor-pointer"
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate('/dashboard')}
         >
           CereNote
         </div>
         <div className="flex justify-between w-full">
+          <div className='grid grid-cols-3 gap-2 w-full'>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="editor-title bg-transparent px-2 py-1 w-1/4 rounded-md focus:outline-none focus:ring border hover:border-2 hover:border-blue-950"
+            className="editor-title bg-transparent px-2 py-1 w-1/4 rounded-md focus:outline-none focus:ring border hover:border-2 hover:border-blue-950 grid-cols-2 w-full"
           />
+                    {/* Display Last Saved */}
+                    {lastSaved && (
+            <div className="text-xs text-gray-600 mt-2 mr-4">
+              Last saved: {getSecondsAgo(lastSaved)}
+            </div>
+          )}
+          </div>
           <button className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Share</button>
         </div>
       </header>
@@ -140,17 +206,8 @@ export const Editor: React.FC = () => {
 
         {/* Editor */}
         <section
-          className={`editor-container bg-blue-950 flex-grow border ml-5 mr-5 overflow-hidden ${
-            isSidebarOpen
-              ? isRightSidebarOpen
-                ? 'w-3/5'
-                : 'w-4/5'
-              : isRightSidebarOpen
-              ? 'w-4/5'
-              : 'w-full'
-          }`}
+          className={`editor-container bg-blue-950 flex-grow border ml-5 mr-5 overflow-hidden ${isSidebarOpen ? 'w-4/5' : 'w-full'}`}
         >
-          <div className="editor-toolbar m-5 bg-gray-900 shadow-sm w-full fixed z-10 top-0"></div>
           <div
             ref={editorRef}
             className="editor-content m-5 bg-white shadow-sm rounded h-full overflow-auto mt-[55px]"
@@ -168,7 +225,7 @@ export const Editor: React.FC = () => {
             {isRightSidebarOpen ? (
               <i className="fas fa-times text-white"></i>
             ) : (
-              <FloatingBtn type={"chat"} />
+              <FloatingBtn type="chat" />
             )}
           </div>
           {isRightSidebarOpen && <AiChat />}
