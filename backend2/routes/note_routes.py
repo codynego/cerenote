@@ -59,6 +59,20 @@ async def user_note_get(note_id: int, db : Session = Depends(get_db), current_us
         "detail": "successful"
     }
 
+@router.delete("/note/{note_id}")
+async def user_note_delete(note_id: int, db : Session = Depends(get_db), current_user: user_schema.UserInDBBase = Depends(auth.get_current_user)):
+    note = db.query(Note).filter(Note.id == note_id).first()
+    if not note:
+        raise HTTPException(status_code=404, detail=f"note not found {note}")
+    db.delete(note)
+    db.commit()
+
+    return {
+        "status_code": 200,
+        "data": note,
+        "detail": "successful"
+    }
+
 @router.delete("/category/{category_id}")
 async def user_category_delete(category_id: int, db : Session = Depends(get_db), current_user: user_schema.UserInDBBase = Depends(auth.get_current_user)):
     #print(db.query(notes_model.Category).filter(owner_id=1))

@@ -161,9 +161,9 @@ export const Editor: React.FC = () => {
   const handleOptionClick = () => setShowActions((prev) => !prev);
 
   return (
-    <div className="editor-wrapper flex flex-col h-screen w-screen">
+    <div className="editor-wrapper flex flex-col h-screen w-screen  bg-gray-100">
       {/* Header */}
-      <header className="editor-header flex items-center px-4 py-2 bg-gray-100 shadow">
+      <header className="editor-header flex items-center px-4 py-2 bg-gray-100 shadow w-full">
         <div
           className="editor-logo font-bold text-3xl text-blue-950 mr-4 cursor-pointer"
           onClick={() => navigate('/dashboard')}
@@ -174,7 +174,8 @@ export const Editor: React.FC = () => {
           <div className="grid grid-cols-3 gap-2 w-full">
             <input
               type="text"
-              value={title || 'Untitled Note'}
+              placeholder='Untitled Note'
+              value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="editor-title bg-transparent px-2 py-1 w-1/4 rounded-md focus:outline-none focus:ring border hover:border-2 hover:border-blue-950 grid-cols-2 w-full"
             />
@@ -211,7 +212,7 @@ export const Editor: React.FC = () => {
       <EditorMenu />
 
       {/* Main Content */}
-      <main className="editor-main bg-gray-200 flex flex-grow overflow-hidden">
+      <main className="relative editor-main bg-gray-200 flex flex-grow overflow-hidden">
         {/* Left Sidebar */}
         <aside
           className={`editor-sidebar relative ${isSidebarOpen ? 'w-1/5' : 'w-0'} transition-all duration-300 bg-gray-200 p-4 shadow-inner`}
@@ -240,11 +241,11 @@ export const Editor: React.FC = () => {
           className={`editor-right-sidebar ${isRightSidebarOpen ? 'w-1/5' : 'w-0'} transition-all duration-300 bg-gray-200 p-4 shadow-inner`}
         >
           <div
-            className="mb-4 px-1 py-1 rounded-md bg-blue-950 hover:bg-red-600"
+            className="mb-4 px-1 py-1 rounded-md bg-blue-950 hover:bg-red-600 z-50 absolute"
             onClick={toggleRightSidebar}
           >
             {isRightSidebarOpen ? (
-              <i className="fas fa-times text-white"></i>
+              <i className="fas fa-times text-white z-50 "></i>
             ) : (
               <FloatingBtn type="chat" />
             )}

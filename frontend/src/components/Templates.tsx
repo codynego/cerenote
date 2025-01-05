@@ -12,11 +12,11 @@ export const Templates: React.FC = () => {
   return (
     <div className="templates-wrapper p-6">
       <h1 className="text-3xl font-bold mb-6">Templates</h1>
-      <div className="templates-scroll grid grid-flow-col auto-cols-[67%] gap-4 overflow-x-auto md:auto-cols-[18%]">
+      <div className="templates-scroll grid grid-flow-col auto-cols-[45%] gap-4 overflow-x-auto md:auto-cols-[28%] lg:auto-cols-[22%]">
         {getTemplate.map((template) => (
           <div
-            key={template.id}
-            className="template-card bg-white shadow-lg rounded-lg p-4 cursor-pointer hover:shadow-xl transition-shadow duration-300 text-wrap"
+            key={template.id} 
+            className="template-card bg-white shadow-lg rounded-lg p-2 cursor-pointer hover:shadow-xl transition-shadow duration-300 text-wrap  h-44 flex justify-center items-center flex-col "
             onClick={() => template.onClick()}
           >
             <h2 className="text-md font-semibold mb-2">{template.name}</h2>

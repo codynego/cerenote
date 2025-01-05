@@ -11,10 +11,10 @@ export const SideBar = () => {
     
 
   return (
-    <div className='md:w-1/5 h-screen bg-blue-950  shadow-slate-300 p-3 md:p-7 flex flex-col justify-between'>
+    <div className='md:w-full h-screen bg-blue-950  shadow-slate-300 p-3 md:p-7 flex flex-col justify-between'>
       <div className="">
-        <div className="border-b-2  mt-2 pt-4 pb-4 border-gray-600">
-            <h2>Recent notes</h2>
+        <div className="border-b-2 pb-4 border-gray-600">
+        <h1 className='text-2xl'>Cerenote</h1>
         </div>
         <Folders title='My Folders' shared={false}/>
         <Folders title='Shared with me' shared={true}/>

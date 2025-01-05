@@ -4,7 +4,7 @@ export const templates = (navigate: NavigateFunction) => [
   {
     id: 1,
     name: 'Resume',
-    description: 'Create a professional resume with ease.',
+    description: 'Create a professional resume.',
     html: `
       <h1 style="text-align: center; font-size: 2.5em; font-weight: bold;">Your Name</h1>
       <p style="text-align: center; font-size: 1.2em; color: gray;">[Your Profession]</p>
@@ -33,7 +33,7 @@ export const templates = (navigate: NavigateFunction) => [
   {
     id: 2,
     name: 'Brainstorm',
-    description: 'Capture and organize your creative ideas.',
+    description: 'organize your creative ideas.',
     html: `
       <h1 style="text-align: center; font-size: 2em; font-weight: bold;">Brainstorming Session</h1>
       <hr style="margin: 20px 0; border: none; border-top: 2px solid #007BFF;" />
@@ -53,7 +53,7 @@ export const templates = (navigate: NavigateFunction) => [
   {
     id: 3,
     name: 'Meeting Notes',
-    description: 'Keep track of meeting details and action items.',
+    description: 'Keep track of meeting details.',
     html: `
       <h1 style="text-align: center; font-size: 2em; font-weight: bold;">Meeting Notes</h1>
       <p style="font-size: 1em; color: gray;"><strong>Date:</strong> [Insert Date]</p>
@@ -77,7 +77,7 @@ export const templates = (navigate: NavigateFunction) => [
   {
     id: 4,
     name: 'To-Do List',
-    description: 'Plan and prioritize your tasks effectively.',
+    description: 'prioritize your tasks.',
     html: `
       <h1 style="text-align: center; font-size: 2em; font-weight: bold;">To-Do List</h1>
       <ul>

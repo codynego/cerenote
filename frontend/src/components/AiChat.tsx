@@ -28,9 +28,9 @@ const AiChat: React.FC = () => {
   };
 
   return (
-    <div className="chat-section flex flex-col h-full">
+    <div className="chat-section flex flex-col h-full z-30 absolute md:static md:p-2 p-5 w-full inset-0 bg-blue-950">
       {/* Chat History */}
-      <div className="chat-history overflow-auto flex-grow mb-4">
+      <div className="chat-history overflow-auto flex-grow mt-10">
         {chatMessages.map((msg, index) => (
           <div key={index} className="chat-message mb-2">
             <div className="user-message text-sm bg-blue-100 p-2 rounded-md text-right">
@@ -44,13 +44,13 @@ const AiChat: React.FC = () => {
       </div>
 
       {/* Input Area */}
-      <div className="chat-input flex items-center gap-2 mt-auto p-2 bg-white shadow-md mb-10">
+      <div className="chat-input flex items-center justify-around gap-2 mt-auto p-2 bg-white shadow-md rounded-lg">
         <input
           type="text"
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
           placeholder="Ask something..."
-          className="flex-grow px-2 py-1 border rounded-md focus:outline-none focus:ring"
+          className="  py-1 border-0 w-full focus:outline-none"
         />
         <button 
           className=" p-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"

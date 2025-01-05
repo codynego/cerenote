@@ -7,7 +7,7 @@ interface ListNotesProps {
 }
 
 export const ListNotes = ({ title }: ListNotesProps) => {
-    const [dropDown, setDropDown] = React.useState(false);
+    const [dropDown, setDropDown] = React.useState(true);
     const [notes, setNotes] = React.useState([]);
     const url = "http://localhost:8000/notes/";
 
@@ -32,7 +32,7 @@ export const ListNotes = ({ title }: ListNotesProps) => {
         </div>
         {
             dropDown ? 
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 my-3">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 my-3 relative">
                 {notes.map((note: any) => (
                     <ListCard key={note.id} note={note} />
                 ))}

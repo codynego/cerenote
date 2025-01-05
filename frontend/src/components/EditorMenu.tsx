@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { FiMenu } from 'react-icons/fi'; // Importing an icon for the mobile menu
 
 const MenuBar: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const handleMenuClick = (menu: string) => {
     setActiveMenu((prevMenu) => (prevMenu === menu ? null : menu));
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen((prev) => !prev);
   };
 
   // Close the menu if clicking outside of the menu area
@@ -13,6 +19,7 @@ const MenuBar: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setActiveMenu(null);
+        setIsMobileMenuOpen(false);
       }
     };
 
@@ -21,105 +28,52 @@ const MenuBar: React.FC = () => {
   }, []);
 
   return (
-    <div ref={menuRef} className="editor-menu-bar z-10 bg-gray-100 px-4 py-2 shadow flex space-x-4">
-      {/* File Menu */}
-      <div className="relative">
-        <button className="menu-item" onClick={() => handleMenuClick('file')}>File</button>
-        {activeMenu === 'file' && (
-          <div className="dropdown-menu flex flex-col gap-2 absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md p-2 items-start">
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">New</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Open</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Save</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Save As</button>
-          </div>
-        )}
+    <div ref={menuRef} className="editor-menu-bar z-10 bg-gray-100 shadow">
+      {/* Mobile Menu Toggle */}
+      <div className="flex justify-between items-center px-4 py-2 md:hidden">
+        <h1 className="text-xl font-bold">Menu</h1>
+        <button onClick={toggleMobileMenu} className="text-2xl">
+          <FiMenu />
+        </button>
       </div>
 
-      {/* Edit Menu */}
-      <div className="relative">
-        <button className="menu-item" onClick={() => handleMenuClick('edit')}>Edit</button>
-        {activeMenu === 'edit' && (
-          <div className="dropdown-menu absolute flex flex-col gap-2 left-0 mt-2 w-48 bg-white shadow-lg rounded-md flex flex-col p-2 items-start">
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Undo</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Redo</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Cut</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Copy</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Paste</button>
+      {/* Menu Items */}
+      <div
+        className={`${
+          isMobileMenuOpen ? 'block' : 'hidden'
+        } md:flex space-x-4 px-4 py-2 flex-col md:flex-row md:items-center`}
+      >
+        {[
+          { name: 'File', items: ['New', 'Open', 'Save', 'Save As'] },
+          { name: 'Edit', items: ['Undo', 'Redo', 'Cut', 'Copy', 'Paste'] },
+          { name: 'View', items: ['Zoom In', 'Zoom Out', 'Full Screen'] },
+          { name: 'Insert', items: ['Image', 'Link', 'Table'] },
+          { name: 'Format', items: ['Bold', 'Italic', 'Underline', 'Text Color', 'Highlight'] },
+          { name: 'Tools', items: ['Spell Check', 'Word Count', 'Find and Replace'] },
+          { name: 'Extensions', items: ['Manage Extensions', 'Add Extension'] },
+          { name: 'Help', items: ['Documentation', 'About', 'Support'] },
+        ].map((menu) => (
+          <div key={menu.name} className="relative">
+            <button
+              className="menu-item hover:underline"
+              onClick={() => handleMenuClick(menu.name)}
+            >
+              {menu.name}
+            </button>
+            {activeMenu === menu.name && (
+              <div className="dropdown-menu flex flex-col gap-2 absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md p-2 items-start md:static">
+                {menu.items.map((item) => (
+                  <button
+                    key={item}
+                    className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left"
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-      </div>
-
-      {/* View Menu */}
-      <div className="relative">
-        <button className="menu-item" onClick={() => handleMenuClick('view')}>View</button>
-        {activeMenu === 'view' && (
-          <div className="dropdown-menu gap-2 absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md flex flex-col p-2 items-start">
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Zoom In</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Zoom Out</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Full Screen</button>
-          </div>
-        )}
-      </div>
-
-      {/* Insert Menu */}
-      <div className="relative">
-        <button className="menu-item" onClick={() => handleMenuClick('insert')}>Insert</button>
-        {activeMenu === 'insert' && (
-          <div className="dropdown-menu gap-2 absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md flex flex-col p-2 items-start">
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Image</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Link</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Table</button>
-          </div>
-        )}
-      </div>
-
-      {/* Format Menu */}
-      <div className="relative">
-        <button className="menu-item" onClick={() => handleMenuClick('format')}>Format</button>
-        {activeMenu === 'format' && (
-          <div className="dropdown-menu flex flex-col p-2 items-start absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md">
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Bold</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Italic</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Underline</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Text Color</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Highlight</button>
-          </div>
-        )}
-      </div>
-
-      {/* Tools Menu */}
-      <div className="relative">
-        <button className="menu-item" onClick={() => handleMenuClick('tools')}>Tools</button>
-        {activeMenu === 'tools' && (
-          <div className="dropdown-menu absolute flex flex-col p-2 items-start left-0 mt-2 w-48 bg-white shadow-lg rounded-md">
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Spell Check</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Word Count</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Find and Replace</button>
-          </div>
-        )}
-      </div>
-
-      {/* Extensions Menu */}
-      <div className="relative">
-        <button className="menu-item" onClick={() => handleMenuClick('extensions')}>Extensions</button>
-        {activeMenu === 'extensions' && (
-          <div className="dropdown-menu flex flex-col p-2 items-start absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md">
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Manage Extensions</button>
-            <button className="dropdown-item hover:bg-blue-950 hover:text-white w-full p-1 text-left">Add Extension</button>
-          </div>
-        )}
-      </div>
-
-      {/* Help Menu */}
-      <div className="relative">
-        <button className="menu-item" onClick={() => handleMenuClick('help')}>Help</button>
-        {activeMenu === 'help' && (
-          <div className="dropdown-menu absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md flex flex-col p-2 items-start">
-            <button className="dropdown-item">Documentation</button>
-            <button className="dropdown-item">About</button>
-            <button className="dropdown-item">Support</button>
-          </div>
-        )}
+        ))}
       </div>
     </div>
   );
