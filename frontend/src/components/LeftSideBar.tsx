@@ -14,6 +14,9 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ audioStream }) => {
     setActiveSection(event.target.value);
   };
 
+  const handleSummarize = () => {
+    console.log("summarize")
+  }
     useEffect(() => {
         if (!audioStream || !audioRef.current) return;
       // Create object URL for the audio stream
@@ -48,7 +51,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ audioStream }) => {
           <div>
             <h3 className="text-xl mb-2">AI Summarization</h3>
             <p>Summarize your notes using AI to get a concise version of the content. This helps in reducing the length while retaining important details.</p>
-            <button className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Summarize</button>
+            <button className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600" onClick={() => {handleSummarize()}}>Summarize</button>
           </div>
         )}
 

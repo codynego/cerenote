@@ -215,20 +215,20 @@ export const Editor: React.FC = () => {
       <main className="relative editor-main bg-gray-200 flex flex-grow overflow-hidden">
         {/* Left Sidebar */}
         <aside
-          className={`editor-sidebar relative ${isSidebarOpen ? 'w-1/5' : 'w-0'} transition-all duration-300 bg-gray-200 p-4 shadow-inner`}
+          className={`editor-sidebar relative ${isSidebarOpen ? 'w-1/5' : 'w-0'} transition-all duration-300 bg-gray-200 md:p-4 p-0 shadow-inner hidden md:block`}
         >
           <button
-            className="absolute right-0 px-2 py-1 bg-blue-950 text-white rounded-md hover:bg-red-600"
+            className="absolute left-2 md:right-0  bg-blue-950 text-white rounded-md hover:bg-red-600"
             onClick={toggleSidebar}
           >
-            <i className={`fas ${isSidebarOpen ? 'fa-times' : 'fa-bars'} text-white`}></i>
+            <i className={`fas text-xs ${isSidebarOpen ? 'fa-times' : 'fa-bars'} text-white`}></i>
           </button>
           {isSidebarOpen && <LeftSidebar audioStream={audioStream} />}
         </aside>
 
         {/* Editor */}
         <section
-          className={`editor-container bg-blue-950 flex-grow border ml-5 mr-5 overflow-hidden ${isSidebarOpen ? 'w-4/5' : 'w-full'}`}
+          className={`editor-container bg-blue-950 flex-grow border md:ml-0 md:mr-0 overflow-hidden ${isSidebarOpen ? 'w-4/5' : 'w-full'}`}
         >
           <div
             ref={editorRef}
@@ -238,7 +238,7 @@ export const Editor: React.FC = () => {
 
         {/* Right Sidebar */}
         <aside
-          className={`editor-right-sidebar ${isRightSidebarOpen ? 'w-1/5' : 'w-0'} transition-all duration-300 bg-gray-200 p-4 shadow-inner`}
+          className={`editor-right-sidebar ${isRightSidebarOpen ? 'w-1/5' : 'w-0'} transition-all duration-300 bg-gray-200 shadow-inner`}
         >
           <div
             className="mb-4 px-1 py-1 rounded-md bg-blue-950 hover:bg-red-600 z-50 absolute"

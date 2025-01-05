@@ -28,7 +28,7 @@ const AiChat: React.FC = () => {
   };
 
   return (
-    <div className="chat-section flex flex-col h-full z-30 absolute md:static md:p-2 p-5 w-full inset-0 bg-blue-950">
+    <div className="chat-section flex flex-col h-full z-30 absolute md:static md:p-2 p-4 w-full inset-0 bg-blue-950">
       {/* Chat History */}
       <div className="chat-history overflow-auto flex-grow mt-10">
         {chatMessages.map((msg, index) => (
