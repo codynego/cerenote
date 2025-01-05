@@ -190,6 +190,21 @@ async def get_audios(db: Session = Depends(get_db), current_user: user_schema.Us
     }
 
 
+# delete all notes
+@router.delete("/notes")
+async def delete_all_notes(db: Session = Depends(get_db), current_user: user_schema.UserInDBBase = Depends(auth.get_current_user)):
+    notes = db.query(Note).filter(Note.owner_id == current_user.id).all()
+    for note in notes:
+        db.delete(note)
+    db.commit()
+    return {
+        "status_code": 200,
+        "data": notes,
+        "detail": "All notes deleted successfully",
+    }
+    
+
+
     
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException
 import json

@@ -123,6 +123,7 @@ export const Editor: React.FC = () => {
         quillRef.current.root.innerHTML = note?.content || '';
       }
 
+
       // Restore the cursor position after setting the content
       if (cursorPosition !== undefined) {
         quillRef.current.setSelection(cursorPosition);
@@ -171,7 +172,7 @@ export const Editor: React.FC = () => {
           <div className='grid grid-cols-3 gap-2 w-full'>
           <input
             type="text"
-            value={title}
+            value={title || "Untitled Note"}
             onChange={(e) => setTitle(e.target.value)}
             className="editor-title bg-transparent px-2 py-1 w-1/4 rounded-md focus:outline-none focus:ring border hover:border-2 hover:border-blue-950 grid-cols-2 w-full"
           />
