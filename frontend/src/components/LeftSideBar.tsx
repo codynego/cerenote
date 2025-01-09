@@ -18,7 +18,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ audioStream }) => {
     console.log("summarize")
   }
     useEffect(() => {
-        if (!audioStream || !audioRef.current) return;
+        if (!audioStream || !audioRef.current) return
       // Create object URL for the audio stream
       const audioUrl = URL.createObjectURL(audioStream);
       audioRef.current.src = audioUrl;
@@ -30,7 +30,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ audioStream }) => {
     }, [audioStream]);
   return (
     <div className="w-64 text-gray-800 pr-4 pl-4 h-full flex flex-col">
-      {/* Sidebar Title */}
+      
       <div className="text-2xl font-semibold mb-6">Note Tools</div>
 
       {/* Dropdown for Section Selection */}
