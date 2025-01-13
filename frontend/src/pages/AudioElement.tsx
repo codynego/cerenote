@@ -57,6 +57,7 @@ export const AudioElement: React.FC<AudioElementProps> = ({ audioStream, output 
         }
       });
       const data = await res.json();
+      console.log("trans", data.data)
       setNote(data.data); // Update note once data is fetched
       setTranscribing(false);
     };
@@ -67,7 +68,7 @@ export const AudioElement: React.FC<AudioElementProps> = ({ audioStream, output 
   const handleNavigate = () => {
     // Pass note as default or fetched state to the editor page
     console.log(audioStream)
-    navigate('/editor', { state: { note: note || { Content: 'hello there' }, audio: audioStream} });
+    navigate('/editor', { state: { note: note , audio: audioStream} });
   };
 
   return (

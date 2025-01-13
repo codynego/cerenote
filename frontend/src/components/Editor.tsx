@@ -107,6 +107,7 @@ export const Editor: React.FC = () => {
 
   // Synchronize Quill content with the WebSocket
   useEffect(() => {
+    console.log("note", noteContent)
     if (noteContent && !note) {
       setNote(noteContent);
     }

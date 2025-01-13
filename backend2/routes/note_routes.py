@@ -15,7 +15,7 @@ import os
 from audio import transcribe_audio
 from pydub import AudioSegment
 from utils.auth import verify_token, get_user
-
+from utils.genai import gen_chat
 
 router = APIRouter()
 
@@ -73,12 +73,36 @@ async def user_note_delete(note_id: int, db : Session = Depends(get_db), current
         "detail": "successful"
     }
 
+@router.post("/note/summarize/{note_id}")
+async def note_summarize(
+    note_content: str,
+    note_id: int,
+    db: Session = Depends(get_db),
+    current_user: user_schema.UserInDBBase = Depends(auth.get_current_user),
+):
+
+    note = db.query(Note).filter(Note.id == note_id, Note.user_id == current_user.id).first()
+
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found or you do not have permission to modify this note.")
+
+    summary = gen_chat(note.content)
+
+    # note.summarized = note_update.summarized or note.summarized
+    note.summary = summary
+
+    # Commit the changes to the database
+    db.commit()
+    db.refresh(note)
+
+    return {"message": "Note updated successfully.", "note": {"id": note.id, "content": note.content, "summary": note.summary}}
+
+
 @router.delete("/category/{category_id}")
 async def user_category_delete(category_id: int, db : Session = Depends(get_db), current_user: user_schema.UserInDBBase = Depends(auth.get_current_user)):
     #print(db.query(notes_model.Category).filter(owner_id=1))
     category = db.query(Category).filter(Category.id == category_id).first()
     if not category:
-        print(category, type(category_id))
         raise HTTPException(status_code=404, detail="category not found")
     db.delete(category)
     db.commit()
@@ -162,9 +186,12 @@ async def note_audio_upload(
         "detail": "Audio uploaded and converted to .wav successfully",
     }
 
-@router.get("/note/transcribe")
+
+from fastapi import Query
+
+@router.get("/note/transcribe/")
 async def note_audio_transcribe(
-    audio_id: int,
+    audio_id: int = Query(..., description="The ID of the audio file to transcribe"),
     db: Session = Depends(get_db),
     current_user: user_schema.UserInDBBase = Depends(auth.get_current_user),
 ):
@@ -180,9 +207,15 @@ async def note_audio_transcribe(
     # print(audio.audio_path)
     
     # Transcribe the audio file
-    transcribed_text = transcribe_audio(audio.audio_path)
+    try:
+        transcribed_text = transcribe_audio(audio.audio_path)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail="a major error here")
     title = f"New Note {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-    note = Note(title=title, content=transcribed_text['text'], owner_id=current_user.id, audio_id=audio_id, category_id=1)
+    try:
+        note = Note(title=title, content=transcribed_text['text'], owner_id=current_user.id, audio_id=audio_id, category_id=1, summary="")
+    except Exception as e:
+        raise HTTPException(status_code=404, detail="loading note")
     db.add(note)
     db.commit()
     db.refresh(note)

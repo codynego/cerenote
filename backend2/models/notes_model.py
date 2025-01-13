@@ -34,6 +34,7 @@ class Note(Base):
     owner = relationship("User", back_populates="notes")
     title = Column(String, index=True)
     content = Column(String)
+    summary = Column(String, nullable=True, default="")
     audio_id = Column(Integer, ForeignKey('audios.id'))
     audio = relationship("Audio", back_populates="notes")
     category_id = Column(Integer, ForeignKey('categories.id'))
