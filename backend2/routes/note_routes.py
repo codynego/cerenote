@@ -73,15 +73,14 @@ async def user_note_delete(note_id: int, db : Session = Depends(get_db), current
         "detail": "successful"
     }
 
-@router.post("/note/summarize/{note_id}")
+@router.get("/note/summarize/{note_id}")
 async def note_summarize(
-    note_content: str,
     note_id: int,
     db: Session = Depends(get_db),
     current_user: user_schema.UserInDBBase = Depends(auth.get_current_user),
 ):
 
-    note = db.query(Note).filter(Note.id == note_id, Note.user_id == current_user.id).first()
+    note = db.query(Note).filter(Note.id == note_id, Note.owner_id == current_user.id).first()
 
     if not note:
         raise HTTPException(status_code=404, detail="Note not found or you do not have permission to modify this note.")
@@ -91,11 +90,45 @@ async def note_summarize(
     # note.summarized = note_update.summarized or note.summarized
     note.summary = summary
 
-    # Commit the changes to the database
+    # Commit the changes to the databaseresponse.dataresponse.data
     db.commit()
     db.refresh(note)
 
-    return {"message": "Note updated successfully.", "note": {"id": note.id, "content": note.content, "summary": note.summary}}
+    return {
+        "status_code": 200,
+        "data": note,
+        "detail": "successful"
+    }
+
+@router.get("/note/chat/{note_id}")
+async def note_summarize(
+    note_id: int,
+    user_input: str,
+    history=List[]
+    db: Session = Depends(get_db),
+    current_user: user_schema.UserInDBBase = Depends(auth.get_current_user),
+):
+
+    note = db.query(Note).filter(Note.id == note_id, Note.owner_id == current_user.id).first()
+
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found or you do not have permission to modify this note.")
+
+    summary = gen_chat(note.content, history, gen_type="chat", context=note.content)
+
+    # note.summarized = note_update.summarized or note.summarized
+    note.summary = summary
+
+    # Commit the changes to the databaseresponse.dataresponse.data
+    db.commit()
+    db.refresh(note)
+
+    return {
+        "status_code": 200,
+        "data": note,
+        "detail": "successful"
+    }
+
 
 
 @router.delete("/category/{category_id}")
@@ -330,6 +363,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str, db: Session = Dep
                 "id": db_note.id,
                 "title": db_note.title,
                 "content": db_note.content,
+                "summary": db_note.summary,
             }
             await websocket.send_json({"remark": f"Note '{db_note.title}' updated successfully.", "note": r_note})
 

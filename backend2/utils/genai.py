@@ -14,7 +14,15 @@ SUMMARIZE_PROMPT = (
     "and ensure the summary is clear and easy to understand."
 )
 
-def configure_model():
+CHAT_PROMPT = (
+    "You will be provided with a piece of text, which could be notes, a document, or any other written content. " 
+    "Consider this text as your context for the following conversation. "
+    "I will ask you questions about the context, and you should answer them accurately and comprehensively based on the provided information. " 
+    "If there is any information missing or unclear, you can state that you cannot answer definitively based on the given context. "
+    "Let's begin."
+)
+
+def configure_model(gen_type=None, context=None):
     """
     Configures the Generative AI model with the required settings.
 
@@ -30,14 +38,14 @@ def configure_model():
         "max_output_tokens": 8192,
         "response_mime_type": "text/plain",
     }
-
+    
     return genai.GenerativeModel(
         model_name="gemini-2.0-flash-exp",
         generation_config=generation_config,
-        system_instruction=SUMMARIZE_PROMPT
+        system_instruction=CHAT_PROMPT += f"\n{context}" if gen_type=="chat" else SUMMARIZE_PROMPT
     )
 
-def gen_chat(user_input, history=[]):
+def gen_chat(user_input, history=[], gen_type=None, context=None):
     """
     Initiates a Generative AI chat session and retrieves a response.
 
@@ -48,6 +56,8 @@ def gen_chat(user_input, history=[]):
     Returns:
         str: The AI model's response.
     """
+    if type == "chat":
+        model = configure_model(gen_type="chat", context)
     model = configure_model()
     chat_session = model.start_chat(history=history)
     response = chat_session.send_message(user_input)

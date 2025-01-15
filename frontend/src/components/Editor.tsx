@@ -32,7 +32,7 @@ export const Editor: React.FC = () => {
   const [isRightSidebarOpen, setRightSidebarOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [socket, setSocket] = useState<WebSocket | null>(null);
-  const [note, setNote] = useState<{ id?: string; title?: string; content?: string; updated_at: string } | null>(null);
+  const [note, setNote] = useState<{ id?: string; title?: string; content?: string; summary?: string; updated_at: string } | null>(null);
   const [messages, setMessages] = useState<string[]>([]);
   const [lastSaved, setLastSaved] = useState<string>(''); // Track last saved time
   const [showActions, setShowActions] = useState(false); // State to control the visibility of action buttons
@@ -224,7 +224,7 @@ export const Editor: React.FC = () => {
           >
             <i className={`fas text-xs ${isSidebarOpen ? 'fa-times' : 'fa-bars'} text-white`}></i>
           </button>
-          {isSidebarOpen && <LeftSidebar audioStream={audioStream} />}
+          {isSidebarOpen && <LeftSidebar audioStream={audioStream} summary={note?.summary} note_id={note?.id} />}
         </aside>
 
         {/* Editor */}
