@@ -43,6 +43,11 @@ export const Editor: React.FC = () => {
   const noteContent = location.state?.note;
   const noteId = noteContent?.id;
 
+  const [leftWidth, setLeftWidth] = useState(20); // Left sidebar width (%)
+  const [rightWidth, setRightWidth] = useState(20); // Right sidebar width (%)
+  const [isDraggingLeft, setIsDraggingLeft] = useState(false);
+  const [isDraggingRight, setIsDraggingRight] = useState(false);
+
   const template = location.state?.template;
   const audioStream = location.state?.audio;
 
@@ -161,6 +166,38 @@ export const Editor: React.FC = () => {
 
   const handleOptionClick = () => setShowActions((prev) => !prev);
 
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDraggingLeft) {
+      const newLeftWidth = (e.clientX / window.innerWidth) * 100;
+      setLeftWidth(Math.min(Math.max(newLeftWidth, 10), 50)); // Restrict between 10% and 50%
+    }
+
+    if (isDraggingRight) {
+      const newRightWidth = ((window.innerWidth - e.clientX) / window.innerWidth) * 100;
+      setRightWidth(Math.min(Math.max(newRightWidth, 10), 50)); // Restrict between 10% and 50%
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDraggingLeft(false);
+    setIsDraggingRight(false);
+  };
+
+  useEffect(() => {
+    if (isDraggingLeft || isDraggingRight) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDraggingLeft, isDraggingRight]);
+
   return (
     <div className="editor-wrapper flex flex-col h-screen w-screen  bg-gray-100">
       {/* Header */}
@@ -216,7 +253,8 @@ export const Editor: React.FC = () => {
       <main className="relative editor-main bg-gray-200 flex flex-grow overflow-hidden">
         {/* Left Sidebar */}
         <aside
-          className={`editor-sidebar relative ${isSidebarOpen ? 'w-1/5' : 'w-0'} transition-all duration-300 bg-gray-200 md:p-4 p-0 shadow-inner hidden md:block`}
+          className={`editor-sidebar relative transition-all duration-300 bg-gray-200 md:p-4 p-0 shadow-inner hidden md:block`}
+          style={{ width: `${isSidebarOpen ? leftWidth + '%' : '0'}` }}
         >
           <button
             className="absolute left-2 md:right-0  bg-blue-950 text-white rounded-md hover:bg-red-600"
@@ -224,12 +262,23 @@ export const Editor: React.FC = () => {
           >
             <i className={`fas text-xs ${isSidebarOpen ? 'fa-times' : 'fa-bars'} text-white`}></i>
           </button>
-          {isSidebarOpen && <LeftSidebar audioStream={audioStream} summary={note?.summary} note_id={note?.id} />}
+          {isSidebarOpen && <LeftSidebar audioStream={audioStream} summary={note?.summary || ''} note_id={note?.id ? parseInt(note.id) : 0} />}
         </aside>
+                {/* Draggable Divider for Left Sidebar */}
+                <div
+          className="resizable-divider"
+          onMouseDown={() => setIsDraggingLeft(true)}
+          style={{
+            cursor: 'ew-resize',
+            width: '5px',
+            backgroundColor: '#ccc',
+          }}
+        ></div>
 
         {/* Editor */}
         <section
           className={`editor-container bg-blue-950 flex-grow border md:ml-0 md:mr-0 overflow-hidden ${isSidebarOpen ? 'w-4/5' : 'w-full'}`}
+          style={{ width: `${100 - leftWidth - rightWidth}%` }}
         >
           <div
             ref={editorRef}
@@ -237,9 +286,21 @@ export const Editor: React.FC = () => {
           ></div>
         </section>
 
+        {/* Draggable Divider for Right Sidebar */}
+        <div
+          className="resizable-divider"
+          onMouseDown={() => setIsDraggingRight(true)}
+          style={{
+            cursor: 'ew-resize',
+            width: '5px',
+            backgroundColor: '#ccc',
+          }}
+        ></div>
+
         {/* Right Sidebar */}
         <aside
-          className={`editor-right-sidebar ${isRightSidebarOpen ? 'w-1/5' : 'w-0'} transition-all duration-300 bg-gray-200 shadow-inner`}
+          className={`editor-right-sidebar  transition-all duration-300 bg-gray-200 shadow-inner`}
+          style={{ width: `${isRightSidebarOpen ? rightWidth + '%' : '0'}` }}
         >
           <div
             className="mb-4 px-1 py-1 rounded-md bg-blue-950 hover:bg-red-600 z-50 absolute"
@@ -251,7 +312,7 @@ export const Editor: React.FC = () => {
               <FloatingBtn type="chat" />
             )}
           </div>
-          {isRightSidebarOpen && <AiChat />}
+          {isRightSidebarOpen && <AiChat noteId={note?.id ? parseInt(note.id) : 0}/>}
         </aside>
       </main>
     </div>

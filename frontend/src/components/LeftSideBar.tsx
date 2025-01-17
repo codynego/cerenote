@@ -61,7 +61,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ audioStream, summary, note_id
   }, [audioStream]);
 
   return (
-    <div className="w-64 text-gray-800 pr-4 pl-4 h-full flex flex-col">
+    <div className=" text-gray-800  h-full flex flex-col">
       <div className="text-2xl font-semibold mb-6">Note Tools</div>
 
       <select

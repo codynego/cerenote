@@ -5,10 +5,14 @@ interface ChatMessage {
   parts: string[];
 }
 
-const AiChat: React.FC = () => {
+
+interface AiChatProps {
+  noteId: number;
+}
+
+const AiChat: React.FC<AiChatProps> = ({ noteId }) => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [userInput, setUserInput] = useState<string>('');
-  const [noteId] = useState<number>(1); // Replace with a dynamic note_id if necessary.
   const [thinking, setThinking] = useState<boolean>(false);
 
   const sendMessage = async () => {
@@ -34,10 +38,9 @@ const AiChat: React.FC = () => {
           history: updatedMessages,
         }),
       });
-      setThinking(false);
+
       if (response.ok) {
         const data = await response.json();
-        console.log("ai response",data.ai_response)
         const aiResponse = { role: 'model', parts: [data.ai_response] };
 
         // Add AI response to the chat history
@@ -48,20 +51,33 @@ const AiChat: React.FC = () => {
     } catch (error) {
       console.error('Error:', error);
       alert('An error occurred.');
+    } finally {
+      setThinking(false);
     }
   };
 
   return (
     <div className="chat-section flex flex-col h-full z-30 absolute md:static md:p-2 p-4 w-full inset-0 bg-blue-950">
       {/* Chat History */}
-      <div className="chat-history overflow-auto flex-grow mt-10">
+      <div className="chat-history overflow-auto flex-grow mt-10 p-3">
         {chatMessages.map((msg, index) => (
           <div key={index} className={`chat-message mb-2 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
-            <div className={`text-sm p-2 rounded-md ${msg.role === 'user' ? 'bg-blue-100' : 'bg-green-100'}`}>
+            <div className={`text-sm p-2 rounded-md inline ${msg.role === 'user' ? 'bg-blue-100' : 'text-white'}`}>
               {msg.parts.join('\n')}
             </div>
           </div>
         ))}
+        {thinking && (
+          <div className="chat-message mb-2 text-left">
+            <div className="text-sm p-2 rounded-md">
+              <span className="dots">
+                <span>.</span>
+                <span>.</span>
+                <span>.</span>
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Input Area */}
