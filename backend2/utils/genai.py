@@ -19,6 +19,7 @@ CHAT_PROMPT = (
     "Consider this text as your context for the following conversation. "
     "I will ask you questions about the context, and you should answer them accurately and comprehensively based on the provided information. " 
     "If there is any information missing or unclear, you can state that you cannot answer definitively based on the given context. "
+    "keep your responses clear, concise, and relevant to the context. and maximum of 3 sentences"
     "Let's begin."
 )
 
@@ -42,7 +43,7 @@ def configure_model(gen_type=None, context=None):
     return genai.GenerativeModel(
         model_name="gemini-2.0-flash-exp",
         generation_config=generation_config,
-        system_instruction=CHAT_PROMPT += f"\n{context}" if gen_type=="chat" else SUMMARIZE_PROMPT
+        system_instruction=(CHAT_PROMPT + f"\n{context}") if gen_type == "chat" else SUMMARIZE_PROMPT
     )
 
 def gen_chat(user_input, history=[], gen_type=None, context=None):
@@ -56,8 +57,8 @@ def gen_chat(user_input, history=[], gen_type=None, context=None):
     Returns:
         str: The AI model's response.
     """
-    if type == "chat":
-        model = configure_model(gen_type="chat", context)
+    if gen_type == "chat":
+        model = configure_model(context, gen_type="chat")
     model = configure_model()
     chat_session = model.start_chat(history=history)
     response = chat_session.send_message(user_input)

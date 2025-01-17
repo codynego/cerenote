@@ -1,29 +1,53 @@
 import React, { useState } from 'react';
 
 interface ChatMessage {
-  user: string;
-  ai: string;
+  role: string;
+  parts: string[];
 }
 
 const AiChat: React.FC = () => {
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);  // Store chat messages
-  const [userInput, setUserInput] = useState<string>('');  // User input for the chat
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [userInput, setUserInput] = useState<string>('');
+  const [noteId] = useState<number>(1); // Replace with a dynamic note_id if necessary.
+  const [thinking, setThinking] = useState<boolean>(false);
 
-  // Handle sending the chat message
   const sendMessage = async () => {
-    if (userInput.trim()) {
-      const newChatMessages = [...chatMessages, { user: userInput, ai: '...thinking' }];
-      setChatMessages(newChatMessages);
-      setUserInput('');  // Reset user input field
+    if (!userInput.trim()) return;
 
-      // Simulate an AI response (You can replace this with an actual API call)
-      setTimeout(() => {
-        const aiResponse = `AI Response to: ${userInput}`;
-        const updatedChatMessages = newChatMessages.map((message, index) =>
-          index === newChatMessages.length - 1 ? { ...message, ai: aiResponse } : message
-        );
-        setChatMessages(updatedChatMessages);
-      }, 1000); // Simulate a delay
+    // Add user input to the chat history
+    const newUserMessage = { role: 'user', parts: [userInput] };
+    const updatedMessages = [...chatMessages, newUserMessage];
+    setChatMessages(updatedMessages);
+    setUserInput('');
+
+    try {
+      setThinking(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8000/note/chat/${noteId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          user_input: userInput,
+          history: updatedMessages,
+        }),
+      });
+      setThinking(false);
+      if (response.ok) {
+        const data = await response.json();
+        console.log("ai response",data.ai_response)
+        const aiResponse = { role: 'model', parts: [data.ai_response] };
+
+        // Add AI response to the chat history
+        setChatMessages((prev) => [...prev, aiResponse]);
+      } else {
+        alert('Failed to get AI response.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred.');
     }
   };
 
@@ -32,12 +56,9 @@ const AiChat: React.FC = () => {
       {/* Chat History */}
       <div className="chat-history overflow-auto flex-grow mt-10">
         {chatMessages.map((msg, index) => (
-          <div key={index} className="chat-message mb-2">
-            <div className="user-message text-sm bg-blue-100 p-2 rounded-md text-right">
-              {msg.user}
-            </div>
-            <div className="ai-message text-sm bg-green-100 p-2 rounded-md mt-1">
-              {msg.ai}
+          <div key={index} className={`chat-message mb-2 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
+            <div className={`text-sm p-2 rounded-md ${msg.role === 'user' ? 'bg-blue-100' : 'bg-green-100'}`}>
+              {msg.parts.join('\n')}
             </div>
           </div>
         ))}
@@ -50,13 +71,9 @@ const AiChat: React.FC = () => {
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
           placeholder="Ask something..."
-          className="  py-1 border-0 w-full focus:outline-none"
+          className="py-1 border-0 w-full focus:outline-none"
         />
-        <button 
-          className=" p-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          onClick={sendMessage}
-        >
-          {/* FontAwesome send icon */}
+        <button className="p-1 bg-blue-500 text-white rounded-md hover:bg-blue-600" onClick={sendMessage}>
           <i className="fas fa-paper-plane text-sm"></i>
         </button>
       </div>

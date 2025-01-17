@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from utils import auth, security
 from database import get_db
-from typing import List
+from typing import List, Dict
 from models.notes_model import Category, Audio, Note
 from schemas import notes_schema, user_schema
 import shutil
@@ -100,35 +100,31 @@ async def note_summarize(
         "detail": "successful"
     }
 
-@router.get("/note/chat/{note_id}")
-async def note_summarize(
+@router.post("/note/chat/{note_id}")
+async def ai_chat(
     note_id: int,
-    user_input: str,
-    history=List[]
+    request_body: dict,
     db: Session = Depends(get_db),
     current_user: user_schema.UserInDBBase = Depends(auth.get_current_user),
 ):
+    # Extract user input and history from the request
+    user_input = request_body.get("user_input")
+    history: List[Dict] = request_body.get("history", [])
 
+    # Validate note ownership
     note = db.query(Note).filter(Note.id == note_id, Note.owner_id == current_user.id).first()
-
     if not note:
-        raise HTTPException(status_code=404, detail="Note not found or you do not have permission to modify this note.")
+        raise HTTPException(status_code=404, detail="Note not found or you do not have permission to access this note.")
 
-    summary = gen_chat(note.content, history, gen_type="chat", context=note.content)
+    # Generate AI response using the note content and history
+    ai_response = gen_chat(
+        user_input=user_input,
+        history=history,
+        gen_type="chat",
+        context=note.content
+    )
 
-    # note.summarized = note_update.summarized or note.summarized
-    note.summary = summary
-
-    # Commit the changes to the databaseresponse.dataresponse.data
-    db.commit()
-    db.refresh(note)
-
-    return {
-        "status_code": 200,
-        "data": note,
-        "detail": "successful"
-    }
-
+    return {"ai_response": ai_response, "detail": "success"}
 
 
 @router.delete("/category/{category_id}")
