@@ -70,7 +70,7 @@ const AiChat: React.FC<AiChatProps> = ({ noteId }) => {
         {thinking && (
           <div className="chat-message mb-2 text-left">
             <div className="text-sm p-2 rounded-md">
-              <span className="dots">
+              <span className="dots text-white">
                 <span>.</span>
                 <span>.</span>
                 <span>.</span>
