@@ -1,8 +1,3 @@
-Collecting workspace information
-
-Sure, here is the updated README file including the installation of `ffmpeg`:
-
-```md
 # Cerenote
 
 Cerenote is a web application designed to help you organize smarter, not harder. It features a user-friendly interface for managing tasks, notes, and audio transcriptions.
